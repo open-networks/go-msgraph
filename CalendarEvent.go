@@ -179,6 +179,8 @@ func mapTimeZoneStrings(timeZone string) string {
 		return "Europe/Vienna"
 	} else if timeZone == "Central Europe Standard Time" {
 		return "CET"
+	} else if timeZone == "tzone://Microsoft/Utc" {
+		return "UTC"
 	}
 	// TODO: Make this list bigger / improve this list with more synonyms or make a workaround
 	return timeZone
