@@ -12,3 +12,23 @@ func (g Groups) String() string {
 	}
 	return "Groups(" + strings.Join(groups, " | ") + ")"
 }
+
+// GetByDisplayName returns the Group obj of that array whose DisplayName matches
+// the given name. Returns an ErrFindGroup if no group exists that matches the given
+// DisplayName.
+func (g Groups) GetByDisplayName(displayName string) (Group, error) {
+	for _, group := range g {
+		if group.DisplayName == displayName {
+			return group, nil
+		}
+	}
+	return Group{}, ErrFindGroup
+}
+
+// setGraphClient sets the GraphClient within that particular instance. Hence it's directly created by GraphClient
+func (g Groups) setGraphClient(gC *GraphClient) Groups {
+	for i := range g {
+		g[i].graphClient = gC
+	}
+	return g
+}

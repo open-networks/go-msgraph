@@ -161,7 +161,9 @@ func (g *GraphClient) ListGroups() (Groups, error) {
 	var marsh struct {
 		Groups Groups `json:"value"`
 	}
-	return marsh.Groups, g.makeGETAPICall(resource, nil, &marsh)
+	err := g.makeGETAPICall(resource, nil, &marsh)
+	marsh.Groups.setGraphClient(g)
+	return marsh.Groups, err
 }
 
 // ListMembersOfGroup returns a list of users who are members to the group
