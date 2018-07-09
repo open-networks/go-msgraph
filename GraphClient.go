@@ -75,8 +75,8 @@ func (g *GraphClient) refreshToken() error {
 	return err
 }
 
-// MakeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
-func (g *GraphClient) MakeGETAPICall(apicall string, getParams url.Values, v interface{}) error {
+// makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
+func (g *GraphClient) makeGETAPICall(apicall string, getParams url.Values, v interface{}) error {
 	g.apiCall.Lock()
 	defer g.apiCall.Unlock() // unlock when the func returns
 	// Check token
@@ -92,7 +92,9 @@ func (g *GraphClient) MakeGETAPICall(apicall string, getParams url.Values, v int
 		return fmt.Errorf("Unable to parse URI %v: %v", BaseURL, err)
 	}
 
-	reqURL.Path = apicall
+	// Add Version to API-Call, the leading slash is always added by the calling func
+	reqURL.Path = "/" + APIVersion + apicall
+
 	req, err := http.NewRequest("GET", reqURL.String(), nil)
 	if err != nil {
 		return fmt.Errorf("HTTP request error: %v", err)
@@ -143,19 +145,19 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list
 func (g *GraphClient) ListUsers() (*Users, error) {
-	resource := fmt.Sprintf("/%v/users", APIVersion)
+	resource := "/users"
 	var users Users
-	return &users, g.MakeGETAPICall(resource, nil, &users)
+	return &users, g.makeGETAPICall(resource, nil, &users)
 }
 
 // ListGroups returns a list of all groups
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list
 func (g *GraphClient) ListGroups() (*Groups, error) {
-	resource := fmt.Sprintf("/%v/groups", APIVersion)
+	resource := "/groups"
 
 	var groups Groups
-	return &groups, g.MakeGETAPICall(resource, nil, &groups)
+	return &groups, g.makeGETAPICall(resource, nil, &groups)
 }
 
 // ListMembersOfGroup returns a list of users who are members to the group
@@ -163,10 +165,10 @@ func (g *GraphClient) ListGroups() (*Groups, error) {
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list_members
 func (g *GraphClient) ListMembersOfGroup(groupID string) (*Users, error) {
-	resource := fmt.Sprintf("/%v/groups/%v/members", APIVersion, groupID)
+	resource := fmt.Sprintf("/groups/%v/members", groupID)
 
 	var users Users
-	return &users, g.MakeGETAPICall(resource, nil, &users)
+	return &users, g.makeGETAPICall(resource, nil, &users)
 }
 
 // GetUser returns the user object associated to the given user identified by either
@@ -174,9 +176,9 @@ func (g *GraphClient) ListMembersOfGroup(groupID string) (*Users, error) {
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_get
 func (g *GraphClient) GetUser(identifier string) (*User, error) {
-	resource := fmt.Sprintf("/%v/users/%v", APIVersion, identifier)
+	resource := fmt.Sprintf("/users/%v", identifier)
 	var user User
-	return &user, g.MakeGETAPICall(resource, nil, &user)
+	return &user, g.makeGETAPICall(resource, nil, &user)
 }
 
 // ListUserCalendars returns all calendars associated to that user identified
@@ -184,10 +186,10 @@ func (g *GraphClient) GetUser(identifier string) (*User, error) {
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list_calendars
 func (g *GraphClient) ListUserCalendars(identifier string) (*Calendars, error) {
-	resource := fmt.Sprintf("/%v/users/%v/calendars", APIVersion, identifier)
+	resource := fmt.Sprintf("/users/%v/calendars", identifier)
 
 	var calendars Calendars
-	return &calendars, g.MakeGETAPICall(resource, nil, &calendars)
+	return &calendars, g.makeGETAPICall(resource, nil, &calendars)
 }
 
 // ListCalendarView returns the CalendarEvents of the given user identified by
@@ -196,7 +198,7 @@ func (g *GraphClient) ListUserCalendars(identifier string) (*Calendars, error) {
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/calendar_list_calendarview
 func (g *GraphClient) ListCalendarView(identifier string, startDateTime, endDateTime time.Time) (*CalendarEvents, error) {
-	resource := fmt.Sprintf("/%v/users/%v/calendar/calendarview", APIVersion, identifier)
+	resource := fmt.Sprintf("/users/%v/calendar/calendarview", identifier)
 
 	// set GET-Params for start and end time
 	getParams := url.Values{}
@@ -204,7 +206,7 @@ func (g *GraphClient) ListCalendarView(identifier string, startDateTime, endDate
 	getParams.Add("enddatetime", endDateTime.Format("2006-01-02T00:00:00"))
 
 	var calendarEvents CalendarEvents
-	return &calendarEvents, g.MakeGETAPICall(resource, getParams, &calendarEvents)
+	return &calendarEvents, g.makeGETAPICall(resource, getParams, &calendarEvents)
 }
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library.
