@@ -25,17 +25,7 @@ const APIVersion string = "v1.0"
 // MaxPageSize is the maximum Page size for an API-call. This will be rewritten to use paging some day. Currently limits environments to 999 entries (e.g. Users, CalendarEvents etc.)
 const MaxPageSize int = 999
 
-// TODO: comment the possible errors
-// Error codes returned by graph utility functions.
 var (
-	ErrDetermineUserShortName = errors.New("unable to determine short name from invalid user principal name")
-	ErrFindUser               = errors.New("unable to find user")
-	ErrGetUserCalendarDetails = errors.New("unable to get user calendar details")
-	ErrGetUserCalendars       = errors.New("unable to get user calendars")
-	ErrGetUser                = errors.New("unable to get user")
-	ErrGetUsersByGroup        = errors.New("unable to get users by group")
-	ErrGetGroups              = errors.New("unable to get groups")
-	ErrGetUsers               = errors.New("unable to get users")
-	ErrRetrieveToken          = errors.New("unable to retrieve API token")
-	ErrGetPrimaryAttendee     = errors.New("unable to find primary calendar event attendee")
+	// ErrFindUser is returned on any func that tries to find a user with the given parameters that can not be found
+	ErrFindUser = errors.New("unable to find user")
 )
