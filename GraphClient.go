@@ -41,6 +41,9 @@ func NewGraphClient(tenantID, applicationID, clientSecret string) (*GraphClient,
 
 // refreshToken refreshes the current Token. Grab's a new one and saves it within the GraphClient instance
 func (g *GraphClient) refreshToken() error {
+	if g.TenantID == "" {
+		return fmt.Errorf("Tenant ID is empty")
+	}
 	resource := fmt.Sprintf("/%v/oauth2/token", g.TenantID)
 	data := url.Values{}
 	data.Add("grant_type", "client_credentials")
@@ -78,7 +81,10 @@ func (g *GraphClient) MakeGETAPICall(apicall string, getParams url.Values, v int
 	defer g.apiCall.Unlock() // unlock when the func returns
 	// Check token
 	if g.token.WantsToBeRefreshed() { // Token not valid anymore?
-		g.refreshToken()
+		err := g.refreshToken()
+		if err != nil {
+			return err
+		}
 	}
 
 	reqURL, err := url.ParseRequestURI(BaseURL)
