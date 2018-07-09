@@ -20,7 +20,7 @@ import (
 // An instance can also be json-unmarshalled an will immediately be initialized, hence a Token will be
 // grabbed. If grabbing a token fails the JSON-Unmarshal returns an error.
 type GraphClient struct {
-	sync.Mutex // make this a sync.Mutex -> lock it when performing an API-call to synchronize it
+	apiCall sync.Mutex // lock it when performing an API-call to synchronize it
 
 	TenantID      string // See https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-tenant-id
 	ApplicationID string // See https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key
@@ -34,8 +34,8 @@ type GraphClient struct {
 // Rerturns an error if the token can not be initialized. This method does not have to be used to create a new GraphClient
 func NewGraphClient(tenantID, applicationID, clientSecret string) (*GraphClient, error) {
 	g := GraphClient{TenantID: tenantID, ApplicationID: applicationID, ClientSecret: clientSecret}
-	g.Lock()         // lock because we will refresh the token
-	defer g.Unlock() // unlock after token refresh
+	g.apiCall.Lock()         // lock because we will refresh the token
+	defer g.apiCall.Unlock() // unlock after token refresh
 	return &g, g.refreshToken()
 }
 
@@ -74,8 +74,8 @@ func (g *GraphClient) refreshToken() error {
 
 // MakeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
 func (g *GraphClient) MakeGETAPICall(apicall string, getParams url.Values, v interface{}) error {
-	g.Lock()
-	defer g.Unlock() // unlock when the func returns
+	g.apiCall.Lock()
+	defer g.apiCall.Unlock() // unlock when the func returns
 	// Check token
 	if g.token.WantsToBeRefreshed() { // Token not valid anymore?
 		g.refreshToken()
