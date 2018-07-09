@@ -134,6 +134,8 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 		return fmt.Errorf("StatusCode is not OK: %v. Body: %v ", resp.StatusCode, string(body))
 	}
 
+	//fmt.Println("Body: ", string(body))
+
 	if err != nil {
 		return fmt.Errorf("HTTP response read error: %v of http.Request: %v", err, req.URL)
 	}
@@ -144,52 +146,58 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 // ListUsers returns a list of all users
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list
-func (g *GraphClient) ListUsers() (*Users, error) {
+func (g *GraphClient) ListUsers() (Users, error) {
 	resource := "/users"
 	var users Users
-	return &users, g.makeGETAPICall(resource, nil, &users)
+	return users, g.makeGETAPICall(resource, nil, &users)
 }
 
 // ListGroups returns a list of all groups
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list
-func (g *GraphClient) ListGroups() (*Groups, error) {
+func (g *GraphClient) ListGroups() (Groups, error) {
 	resource := "/groups"
 
-	var groups Groups
-	return &groups, g.makeGETAPICall(resource, nil, &groups)
+	var marsh struct {
+		Groups Groups `json:"value"`
+	}
+	return marsh.Groups, g.makeGETAPICall(resource, nil, &marsh)
 }
 
 // ListMembersOfGroup returns a list of users who are members to the group
 // identified by the given groupID.
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list_members
-func (g *GraphClient) ListMembersOfGroup(groupID string) (*Users, error) {
+func (g *GraphClient) ListMembersOfGroup(groupID string) (Users, error) {
 	resource := fmt.Sprintf("/groups/%v/members", groupID)
 
-	var users Users
-	return &users, g.makeGETAPICall(resource, nil, &users)
+	var marsh struct {
+		Users Users `json:"value"`
+	}
+	return marsh.Users, g.makeGETAPICall(resource, nil, &marsh)
 }
 
 // GetUser returns the user object associated to the given user identified by either
 // the given ID or userPrincipalName
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_get
-func (g *GraphClient) GetUser(identifier string) (*User, error) {
+func (g *GraphClient) GetUser(identifier string) (User, error) {
 	resource := fmt.Sprintf("/users/%v", identifier)
 	var user User
-	return &user, g.makeGETAPICall(resource, nil, &user)
+	return user, g.makeGETAPICall(resource, nil, &user)
 }
 
 // ListUserCalendars returns all calendars associated to that user identified
 // by either the users ID or userPrincipalName
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list_calendars
-func (g *GraphClient) ListUserCalendars(identifier string) (*Calendars, error) {
+func (g *GraphClient) ListUserCalendars(identifier string) (Calendars, error) {
 	resource := fmt.Sprintf("/users/%v/calendars", identifier)
 
-	var calendars Calendars
-	return &calendars, g.makeGETAPICall(resource, nil, &calendars)
+	var marsh struct {
+		Calendars Calendars `json:"value"`
+	}
+	return marsh.Calendars, g.makeGETAPICall(resource, nil, &marsh)
 }
 
 // ListCalendarView returns the CalendarEvents of the given user identified by
@@ -197,7 +205,7 @@ func (g *GraphClient) ListUserCalendars(identifier string) (*Calendars, error) {
 // endDateTime. The calendar used is the default calendar of the user.
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/calendar_list_calendarview
-func (g *GraphClient) ListCalendarView(identifier string, startDateTime, endDateTime time.Time) (*CalendarEvents, error) {
+func (g *GraphClient) ListCalendarView(identifier string, startDateTime, endDateTime time.Time) (CalendarEvents, error) {
 	resource := fmt.Sprintf("/users/%v/calendar/calendarview", identifier)
 
 	// set GET-Params for start and end time
@@ -206,7 +214,7 @@ func (g *GraphClient) ListCalendarView(identifier string, startDateTime, endDate
 	getParams.Add("enddatetime", endDateTime.Format("2006-01-02T00:00:00"))
 
 	var calendarEvents CalendarEvents
-	return &calendarEvents, g.makeGETAPICall(resource, getParams, &calendarEvents)
+	return calendarEvents, g.makeGETAPICall(resource, getParams, &calendarEvents)
 }
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library.

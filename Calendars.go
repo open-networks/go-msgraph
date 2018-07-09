@@ -5,13 +5,11 @@ import (
 )
 
 // Calendars represents an array of Calendar instances
-type Calendars struct {
-	Calendars []Calendar `json:"value"` // A list of Calendars
-}
+type Calendars []Calendar
 
 func (c Calendars) String() string {
-	var calendars = make([]string, len(c.Calendars))
-	for i, calendar := range c.Calendars {
+	var calendars = make([]string, len(c))
+	for i, calendar := range c {
 		calendars[i] = calendar.String()
 	}
 	return "Calendars(" + strings.Join(calendars, " | ") + ")"
