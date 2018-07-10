@@ -42,18 +42,26 @@ func (u Users) GetUserByMail(email string) (User, error) {
 }
 
 func (u Users) String() string {
-	var users []string
-	for _, user := range u {
-		users = append(users, user.String())
+	var strs = make([]string, len(u))
+	for i, user := range u {
+		strs[i] = user.String()
 	}
-	return fmt.Sprintf("Users(%v)", strings.Join(users, ", "))
+	return fmt.Sprintf("Users(%v)", strings.Join(strs, ", "))
 }
 
 // PrettySimpleString returns the whole []Users pretty simply formatted for logging purposes
 func (u Users) PrettySimpleString() string {
-	var users []string
-	for _, user := range u {
-		users = append(users, user.String())
+	var strs = make([]string, len(u))
+	for i, user := range u {
+		strs[i] = user.PrettySimpleString()
 	}
-	return strings.Join(users, ", ")
+	return fmt.Sprintf("Users(%v)", strings.Join(strs, ", "))
+}
+
+// setGraphClient sets the GraphClient within that particular instance. Hence it's directly created by GraphClient
+func (u Users) setGraphClient(gC *GraphClient) Users {
+	for i := range u {
+		u[i].graphClient = gC
+	}
+	return u
 }

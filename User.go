@@ -3,6 +3,7 @@ package msgraph
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // User represents a user from the ms graph API
@@ -16,15 +17,27 @@ type User struct {
 	PreferredLanguage string   `json:"preferredLanguage"`
 	Surname           string   `json:"surname"`
 	UserPrincipalName string   `json:"userPrincipalName"`
-	activePhone       string   // private cache for the active phone number
+
+	activePhone string       // private cache for the active phone number
+	graphClient *GraphClient // the graphClient that called the user
 }
 
 func (u *User) String() string {
 	return fmt.Sprintf("User(ID: \"%v\", BusinessPhones: \"%v\", DisplayName: \"%v\", GivenName: \"%v\", "+
 		"Mail: \"%v\", MobilePhone: \"%v\", PreferredLanguage: \"%v\", Surname: \"%v\", UserPrincipalName: \"%v\", "+
-		"ActivePhone: \"%v\")",
+		"ActivePhone: \"%v\", DirectAPIConnection: %v)",
 		u.ID, u.BusinessPhones, u.DisplayName, u.GivenName, u.Mail, u.MobilePhone, u.PreferredLanguage, u.Surname,
-		u.UserPrincipalName, u.activePhone)
+		u.UserPrincipalName, u.activePhone, u.graphClient != nil)
+}
+
+// ListCalendarView list's the users calendar view within the given time range.
+//
+// See https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list_calendarview
+func (u User) ListCalendarView(startdate, enddate time.Time) (CalendarEvents, error) {
+	if u.graphClient == nil {
+		return CalendarEvents{}, ErrNotGraphClientSourced
+	}
+	return u.graphClient.ListCalendarView(u.ID, startdate, enddate)
 }
 
 // GetActivePhone returns the space-trimmed active phone-number of the user. The active
