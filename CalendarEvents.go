@@ -8,27 +8,28 @@ import (
 )
 
 // CalendarEvents represents multiple events of a Calendar. The amount of entries is determined by the timespan that is used to load the Calendar
-type CalendarEvents struct {
-	CalendarEvents []CalendarEvent `json:"value"`
-}
+type CalendarEvents []CalendarEvent
 
-func (c *CalendarEvents) String() string {
-	return fmt.Sprintf("CalendarEvents(%v)", c.CalendarEvents)
+func (c CalendarEvents) String() string {
+	var events = make([]string, len(c))
+	for i, calendarEvent := range c {
+		events[i] = calendarEvent.String()
+	}
+	return fmt.Sprintf("CalendarEvents(%v)", strings.Join(events, ", "))
 }
 
 // PrettySimpleString returns all Calendar Events in a readable format, mostly used for logging purposes
-func (c *CalendarEvents) PrettySimpleString() string {
-	var events = make([]string, len(c.CalendarEvents))
-	for i, calendarEvent := range c.CalendarEvents {
+func (c CalendarEvents) PrettySimpleString() string {
+	var events = make([]string, len(c))
+	for i, calendarEvent := range c {
 		events[i] = fmt.Sprintf("{ %v (%v) [%v - %v] }", calendarEvent.Subject, calendarEvent.GetFirstAttendee().Name, calendarEvent.StartTime, calendarEvent.EndTime)
-		//start.Format("02.01.2006 15:04:05"), end.Format("02.01.2006 15:04:05")))
 	}
-	return strings.Join(events, ", ")
+	return fmt.Sprintf("CalendarEvents(%v)", strings.Join(events, ", "))
 }
 
 // SortByStartDateTime sorts the array in this CalendarEvents instance
-func (c *CalendarEvents) SortByStartDateTime() {
-	sort.Slice(c.CalendarEvents, func(i, j int) bool { return c.CalendarEvents[i].StartTime.Before(c.CalendarEvents[j].StartTime) })
+func (c CalendarEvents) SortByStartDateTime() {
+	sort.Slice(c, func(i, j int) bool { return c[i].StartTime.Before(c[j].StartTime) })
 }
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library. The only
@@ -43,7 +44,9 @@ func (c *CalendarEvents) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("Can not UnmarshalJSON: %v | Data: %v", err, string(data))
 	}
 
-	c.CalendarEvents = tmp.CalendarEvents
+	*c = tmp.CalendarEvents // re-assign the
+
+	//c.CalendarEvents = tmp.CalendarEvents
 	c.SortByStartDateTime()
 	return nil
 }
