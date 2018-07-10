@@ -1,7 +1,6 @@
 package msgraph
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -77,23 +76,57 @@ func TestNewGraphClient(t *testing.T) {
 	}
 }
 
+func TestGraphClient_ListUsers(t *testing.T) {
+	tests := []struct {
+		name    string
+		g       *GraphClient
+		want    User
+		wantErr bool
+	}{
+		{
+			name:    fmt.Sprintf("List all Users, check for user %v", msGraphExistingUserPrincipalInGroup),
+			g:       graphClient,
+			want:    User{UserPrincipalName: msGraphExistingUserPrincipalInGroup},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.g.ListUsers()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GraphClient.ListUsers() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if len(got) == 0 {
+				t.Errorf("GraphClient.ListUsers() len = 0, want more than 0: %v", got)
+			}
+			isGraphClientInitializd := true
+			found := false
+			for _, user := range got {
+				isGraphClientInitializd = isGraphClientInitializd && user.graphClient != nil
+				found = found || user.UserPrincipalName == tt.want.UserPrincipalName
+			}
+			if !found {
+				t.Errorf("GraphClient.ListUsers() user %v not found, users: %v", tt.want.UserPrincipalName, got)
+			}
+			if !isGraphClientInitializd {
+				t.Errorf("GraphClient.ListUsers() graphClient is nil, but was initialized from GraphClient")
+			}
+		})
+	}
+}
+
 func TestGraphClient_ListGroups(t *testing.T) {
 	tests := []struct {
 		name    string
 		g       *GraphClient
-		want    Groups
+		want    Group
 		wantErr bool
 	}{
 		{
-			name: "Test if one of the groups provided is present",
-			g:    graphClient,
-			want: Groups{
-				Group{DisplayName: "Employees"},
-				Group{DisplayName: "Finance"},
-				Group{DisplayName: "Sales"},
-				Group{DisplayName: "Admins"},
-				Group{DisplayName: "Administrators"},
-			},
+			name:    fmt.Sprintf("Test if Group %v is present", msGraphExistingGroupDisplayName),
+			g:       graphClient,
+			want:    Group{DisplayName: msGraphExistingGroupDisplayName},
 			wantErr: false,
 		},
 	}
@@ -104,14 +137,56 @@ func TestGraphClient_ListGroups(t *testing.T) {
 				t.Errorf("GraphClient.ListGroups() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			var found bool
-			for _, searchObj := range tt.want {
-				for _, checkObj := range got {
-					found = found || searchObj.DisplayName == checkObj.DisplayName
-				}
+			found := false
+			isGraphClientInitializd := true
+			for _, checkObj := range got {
+				found = found || tt.want.DisplayName == checkObj.DisplayName
+				isGraphClientInitializd = isGraphClientInitializd && checkObj.graphClient != nil
 			}
 			if !found {
 				t.Errorf("GraphClient.ListGroups() = %v, searching for one of %v", got, tt.want)
+			}
+			if !isGraphClientInitializd {
+				t.Errorf("GraphClient.ListGroups() graphClient is nil, but was initialized from GraphClient")
+			}
+		})
+	}
+}
+
+func TestGraphClient_GetUser(t *testing.T) {
+	type args struct {
+		identifier string
+	}
+	tests := []struct {
+		name    string
+		g       *GraphClient
+		args    args
+		want    User
+		wantErr bool
+	}{
+		{
+			name:    fmt.Sprintf("Test if user %v is present", msGraphExistingUserPrincipalInGroup),
+			g:       graphClient,
+			args:    args{identifier: msGraphExistingUserPrincipalInGroup},
+			want:    User{UserPrincipalName: msGraphExistingUserPrincipalInGroup},
+			wantErr: false,
+		}, {
+			name:    "Test if non-existing user produces err",
+			g:       graphClient,
+			args:    args{identifier: "ThisUserwillNotExistForSure@contoso.com"},
+			want:    User{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.g.GetUser(tt.args.identifier)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GraphClient.GetUser() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got.UserPrincipalName != tt.want.UserPrincipalName {
+				t.Errorf("GraphClient.GetUser() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -120,16 +195,54 @@ func TestGraphClient_ListGroups(t *testing.T) {
 func TestGraphClient_UnmarshalJSON(t *testing.T) {
 	TestEnvironmentVariablesPresent(t) // check prerequisites
 
-	jsonString := fmt.Sprintf("{"+
-		"\"TenantID\": \"%v\","+
-		"\"ApplicationID\": \"%v\","+
-		"\"ClientSecret\": \"%v\""+
-		"}",
-		msGraphTenantID, msGraphApplicationID, msGraphClientSecret,
-	)
-	var marsh GraphClient
-	err := json.Unmarshal([]byte(jsonString), &marsh)
-	if err != nil {
-		t.Errorf("Error on JSON-Unmarshal: %v", err)
+	type args struct {
+		data []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name:    "All correct",
+			args:    args{data: []byte(fmt.Sprintf("{\"TenantID\": \"%v\", \"ApplicationID\": \"%v\",\"ClientSecret\": \"%v\"}", msGraphTenantID, msGraphApplicationID, msGraphClientSecret))},
+			wantErr: false,
+		}, {
+			name:    "JSON-syntax error",
+			args:    args{data: []byte(fmt.Sprintf("{\"TenantID\": \"%v\", \"ApplicationID\": \"%v\",\"ClientSecret\": \"%v\"", msGraphTenantID, msGraphApplicationID, msGraphClientSecret))},
+			wantErr: true,
+		}, {
+			name:    "TenantID incorrect",
+			args:    args{data: []byte(fmt.Sprintf("{\"TenantID\": \"%v\", \"ApplicationID\": \"%v\",\"ClientSecret\": \"%v\"}", "wrongtenant", msGraphApplicationID, msGraphClientSecret))},
+			wantErr: true,
+		}, {
+			name:    "TenantID empty",
+			args:    args{data: []byte(fmt.Sprintf("{\"TenantID\": \"%v\", \"ApplicationID\": \"%v\",\"ClientSecret\": \"%v\"}", "", msGraphApplicationID, msGraphClientSecret))},
+			wantErr: true,
+		}, {
+			name:    "ApplicationID incorrect",
+			args:    args{data: []byte(fmt.Sprintf("{\"TenantID\": \"%v\", \"ApplicationID\": \"%v\",\"ClientSecret\": \"%v\"}", msGraphTenantID, "wrongapplication", msGraphClientSecret))},
+			wantErr: true,
+		}, {
+			name:    "ApplicationID empty",
+			args:    args{data: []byte(fmt.Sprintf("{\"TenantID\": \"%v\", \"ApplicationID\": \"%v\",\"ClientSecret\": \"%v\"}", msGraphTenantID, "", msGraphClientSecret))},
+			wantErr: true,
+		}, {
+			name:    "ClientSecret incorrect",
+			args:    args{data: []byte(fmt.Sprintf("{\"TenantID\": \"%v\", \"ApplicationID\": \"%v\",\"ClientSecret\": \"%v\"}", msGraphTenantID, msGraphApplicationID, "wrongclientsecret"))},
+			wantErr: true,
+		}, {
+			name:    "ClientSecret empty",
+			args:    args{data: []byte(fmt.Sprintf("{\"TenantID\": \"%v\", \"ApplicationID\": \"%v\",\"ClientSecret\": \"%v\"}", msGraphTenantID, msGraphApplicationID, ""))},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var unmarshalTest GraphClient
+			if err := unmarshalTest.UnmarshalJSON(tt.args.data); (err != nil) != tt.wantErr {
+				t.Errorf("GraphClient.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }

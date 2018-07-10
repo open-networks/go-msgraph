@@ -148,8 +148,12 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list
 func (g *GraphClient) ListUsers() (Users, error) {
 	resource := "/users"
-	var users Users
-	return users, g.makeGETAPICall(resource, nil, &users)
+	var marsh struct {
+		Users Users `json:"value"`
+	}
+	err := g.makeGETAPICall(resource, nil, &marsh)
+	marsh.Users.setGraphClient(g)
+	return marsh.Users, err
 }
 
 // ListGroups returns a list of all groups
@@ -176,6 +180,7 @@ func (g *GraphClient) ListMembersOfGroup(groupID string) (Users, error) {
 	var marsh struct {
 		Users Users `json:"value"`
 	}
+	marsh.Users.setGraphClient(g)
 	return marsh.Users, g.makeGETAPICall(resource, nil, &marsh)
 }
 
@@ -185,8 +190,9 @@ func (g *GraphClient) ListMembersOfGroup(groupID string) (Users, error) {
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_get
 func (g *GraphClient) GetUser(identifier string) (User, error) {
 	resource := fmt.Sprintf("/users/%v", identifier)
-	var user User
-	return user, g.makeGETAPICall(resource, nil, &user)
+	user := User{graphClient: g}
+	err := g.makeGETAPICall(resource, nil, &user)
+	return user, err
 }
 
 // ListUserCalendars returns all calendars associated to that user identified
