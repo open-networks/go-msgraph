@@ -29,6 +29,16 @@ type GraphClient struct {
 	token Token // the current token to be used
 }
 
+func (g *GraphClient) String() string {
+	var firstPart, lastPart string
+	if len(g.ClientSecret) > 4 { // if ClientSecret is not initialized prefent a panic slice out of bounds
+		firstPart = g.ClientSecret[0:3]
+		lastPart = g.ClientSecret[len(g.ClientSecret)-3:]
+	}
+	return fmt.Sprintf("GraphClient(TenantID: %v, ApplicationID: %v, ClientSecret: %v...%v, Token validity: [%v - %v])",
+		g.TenantID, g.ApplicationID, firstPart, lastPart, g.token.NotBefore, g.token.ExpiresOn)
+}
+
 // NewGraphClient creates a new GraphClient instance with the given parameters and grab's a token.
 //
 // Rerturns an error if the token can not be initialized. This method does not have to be used to create a new GraphClient
