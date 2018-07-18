@@ -73,3 +73,16 @@ func (u User) GetFullName() string {
 func (u User) PrettySimpleString() string {
 	return fmt.Sprintf("{ %v (%v) (%v) }", u.GetFullName(), u.Mail, u.GetActivePhone())
 }
+
+// Equal returns wether the user equals the other User by comparing every property
+// of the user including the ID
+func (u User) Equal(other User) bool {
+	var equalBool = true
+	for i := 0; i < len(u.BusinessPhones) && i < len(other.BusinessPhones); i++ {
+		equalBool = equalBool && u.BusinessPhones[i] == other.BusinessPhones[i]
+	}
+	equalBool = equalBool && len(u.BusinessPhones) == len(other.BusinessPhones)
+	return equalBool && u.ID == other.ID && u.DisplayName == other.DisplayName && u.GivenName == other.GivenName &&
+		u.Mail == other.Mail && u.MobilePhone == other.MobilePhone && u.PreferredLanguage == other.PreferredLanguage &&
+		u.Surname == other.Surname && u.UserPrincipalName == other.UserPrincipalName
+}
