@@ -56,7 +56,7 @@ func (u *User) GetActivePhone() string {
 
 // GetShortName returns the first part of UserPrincipalName before the @. If there
 // is no @, then just the UserPrincipalName will be returned
-func (u *User) GetShortName() string {
+func (u User) GetShortName() string {
 	supn := strings.Split(u.UserPrincipalName, "@")
 	if len(supn) != 2 {
 		return u.UserPrincipalName
@@ -65,11 +65,11 @@ func (u *User) GetShortName() string {
 }
 
 // GetFullName returns the full name in that format: <firstname> <lastname>
-func (u *User) GetFullName() string {
+func (u User) GetFullName() string {
 	return fmt.Sprintf("%v %v", u.GivenName, u.Surname)
 }
 
 // PrettySimpleString returns the User-instance simply formatted for logging purposes: {FullName (email) (activePhone)}
-func (u *User) PrettySimpleString() string {
+func (u User) PrettySimpleString() string {
 	return fmt.Sprintf("{ %v (%v) (%v) }", u.GetFullName(), u.Mail, u.GetActivePhone())
 }
