@@ -175,13 +175,17 @@ func parseTimeAndLocation(timeToParse, locationToParse string) (time.Time, error
 
 // mapTimeZoneStrings maps various Timezones used by Microsoft to go-understandable timezones or returns the source-zone if no mapping is found
 func mapTimeZoneStrings(timeZone string) string {
-	if timeZone == "W. Europe Standard Time" {
+	switch timeZone {
+	case "W. Europe Standard Time":
 		return "Europe/Vienna"
-	} else if timeZone == "Central Europe Standard Time" {
+	case "Central Europe Standard Time":
 		return "CET"
-	} else if timeZone == "tzone://Microsoft/Utc" {
+	case "tzone://Microsoft/Utc":
 		return "UTC"
+	case "India Standard Time":
+		return "IST"
 	}
-	// TODO: Make this list bigger / improve this list with more synonyms or make a workaround
+	// TODO: Make this list bigger / improve this list with more synonyms or make a more dynamic workaround
+	// Hint: probably this could list all timezones and even enable to automatically determine the correct timezone: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/outlookuser_supportedtimezones
 	return timeZone
 }
