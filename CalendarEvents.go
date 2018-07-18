@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 )
 
 // CalendarEvents represents multiple events of a Calendar. The amount of entries is determined by the timespan that is used to load the Calendar
@@ -30,6 +31,18 @@ func (c CalendarEvents) PrettySimpleString() string {
 // SortByStartDateTime sorts the array in this CalendarEvents instance
 func (c CalendarEvents) SortByStartDateTime() {
 	sort.Slice(c, func(i, j int) bool { return c[i].StartTime.Before(c[j].StartTime) })
+}
+
+// GetCalendarEventsAtCertainTime returns a subset of CalendarEvents that either start or end
+// at the givenTime or whose StartTime is before and EndTime is After the givenTime
+func (c CalendarEvents) GetCalendarEventsAtCertainTime(givenTime time.Time) CalendarEvents {
+	var events []CalendarEvent
+	for _, event := range c {
+		if event.StartTime.Equal(givenTime) || event.EndTime.Equal(givenTime) || (event.StartTime.Before(givenTime) && event.EndTime.After(givenTime)) {
+			events = append(events, event)
+		}
+	}
+	return events
 }
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library. The only
