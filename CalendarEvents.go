@@ -22,7 +22,7 @@ func (c CalendarEvents) String() string {
 func (c CalendarEvents) PrettySimpleString() string {
 	var events = make([]string, len(c))
 	for i, calendarEvent := range c {
-		events[i] = fmt.Sprintf("{ %v (%v) [%v - %v] }", calendarEvent.Subject, calendarEvent.GetFirstAttendee().Name, calendarEvent.StartTime, calendarEvent.EndTime)
+		events[i] = calendarEvent.PrettySimpleString()
 	}
 	return fmt.Sprintf("CalendarEvents(%v)", strings.Join(events, ", "))
 }

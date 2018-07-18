@@ -60,6 +60,11 @@ func (c *CalendarEvent) String() string {
 		c.Type, c.ResponseStatus, c.Attendees, c.OrganizerName+" "+c.OrganizerEMail, c.StartTime, c.EndTime)
 }
 
+// PrettySimpleString returns all Calendar Events in a readable format, mostly used for logging purposes
+func (c CalendarEvent) PrettySimpleString() string {
+	return fmt.Sprintf("{ %v (%v) [%v - %v] }", c.Subject, c.GetFirstAttendee().Name, c.StartTime, c.EndTime)
+}
+
 // UnmarshalJSON implements the json unmarshal to be used by the json-library
 func (c *CalendarEvent) UnmarshalJSON(data []byte) error {
 	tmp := struct {
