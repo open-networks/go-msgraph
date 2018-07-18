@@ -33,13 +33,13 @@ type CalendarEvent struct {
 }
 
 // GetEventTimes returns the begin-time and the end-time of the Calendar Event
-func (c *CalendarEvent) GetEventTimes() (time.Time, time.Time) {
+func (c CalendarEvent) GetEventTimes() (time.Time, time.Time) {
 	return c.StartTime, c.EndTime
 }
 
 // GetFirstAttendee returns the first Attendee that is not the organizer of the event from the Attendees array.
 // If none is found then an Attendee with the Name of "None" will be returned.
-func (c *CalendarEvent) GetFirstAttendee() Attendee {
+func (c CalendarEvent) GetFirstAttendee() Attendee {
 	for _, attendee := range c.Attendees {
 		if attendee.Email != c.OrganizerEMail {
 			return attendee
