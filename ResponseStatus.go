@@ -12,6 +12,16 @@ type ResponseStatus struct {
 	Time     time.Time // represents the time when the response was performed
 }
 
+func (s ResponseStatus) String() string {
+	return fmt.Sprintf("Response: %s, Time: %v", s.Response, s.Time)
+}
+
+// Equal compares the ResponseStatus to the other Response status and returns true
+// if the Response and time is equal
+func (s ResponseStatus) Equal(other ResponseStatus) bool {
+	return s.Response == other.Response && s.Time.Equal(other.Time)
+}
+
 // UnmarshalJSON implements the json unmarshal to be used by the json-library
 func (s *ResponseStatus) UnmarshalJSON(data []byte) error {
 	tmp := struct {
@@ -22,6 +32,9 @@ func (s *ResponseStatus) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
 		return err
+	}
+	if tmp.Response == "" {
+		return fmt.Errorf("Reponse-field is empty")
 	}
 
 	s.Response = tmp.Response
