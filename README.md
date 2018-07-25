@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/open-networks/go-msgraph.svg?branch=master)](https://travis-ci.org/open-networks/go-msgraph)
 [![Go Report Card](https://goreportcard.com/badge/github.com/open-networks/go-msgraph)](https://goreportcard.com/report/github.com/open-networks/go-msgraph)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/0f21b4bbb7334f9c8ce3a04852533dd4)](https://www.codacy.com/app/TerraTalpi/go-msgraph?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=open-networks/go-msgraph&amp;utm_campaign=Badge_Grade)
+[![codecov](https://codecov.io/gh/open-networks/go-msgraph/branch/master/graph/badge.svg)](https://codecov.io/gh/open-networks/go-msgraph)
 
 go-msgraph is a go lang implementation of the Microsoft Graph API. See https://developer.microsoft.com/en-us/graph/docs/concepts/overview
 
