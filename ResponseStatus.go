@@ -13,7 +13,7 @@ type ResponseStatus struct {
 }
 
 func (s ResponseStatus) String() string {
-	return fmt.Sprintf("Response: %s, Time: %v", s.Response, s.Time)
+	return fmt.Sprintf("Response: %s, Time: %s", s.Response, s.Time.Format(time.RFC3339Nano))
 }
 
 // Equal compares the ResponseStatus to the other Response status and returns true

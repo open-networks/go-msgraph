@@ -21,7 +21,7 @@ func TestResponseStatus_Equal(t *testing.T) {
 		{
 			name: "Equal",
 			s:    ResponseStatus{Response: "accepted", Time: testTime},
-			args: args{other: ResponseStatus{Response: "confirmed", Time: testTime}},
+			args: args{other: ResponseStatus{Response: "accepted", Time: testTime}},
 			want: true,
 		}, {
 			name: "non-equal response",
