@@ -13,6 +13,16 @@ type Attendee struct {
 	ResponseStatus ResponseStatus // the ResponseStatus for that particular Attendee for the CalendarEvent
 }
 
+func (a Attendee) String() string {
+	return fmt.Sprintf("Name: %s, Type: %s, E-mail: %s, ResponseStatus: %v", a.Name, a.Type, a.Email, a.ResponseStatus)
+}
+
+// Equal compares the Attendee to the other Attendee and returns true
+// if the two given Attendees are equal. Otherwise returns false
+func (a Attendee) Equal(other Attendee) bool {
+	return a.Type == other.Type && a.Name == other.Name && a.Email == other.Email && a.ResponseStatus.Equal(other.ResponseStatus)
+}
+
 // UnmarshalJSON implements the json unmarshal to be used by the json-library
 func (a *Attendee) UnmarshalJSON(data []byte) error {
 	tmp := struct {
