@@ -31,7 +31,7 @@ type GraphClient struct {
 
 func (g *GraphClient) String() string {
 	var firstPart, lastPart string
-	if len(g.ClientSecret) > 4 { // if ClientSecret is not initialized prefent a panic slice out of bounds
+	if len(g.ClientSecret) > 4 { // if ClientSecret is not initialized prevent a panic slice out of bounds
 		firstPart = g.ClientSecret[0:3]
 		lastPart = g.ClientSecret[len(g.ClientSecret)-3:]
 	}
