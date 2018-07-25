@@ -65,3 +65,18 @@ func (u Users) setGraphClient(gC *GraphClient) Users {
 	}
 	return u
 }
+
+// Equal compares the Users to the other Users and returns true
+// if the two given Users are equal. Otherwise returns false
+func (u Users) Equal(other Users) bool {
+Outer:
+	for _, user := range u {
+		for _, toCompare := range other {
+			if user.Equal(toCompare) {
+				continue Outer
+			}
+		}
+		return false
+	}
+	return len(u) == len(other) // if we reach this, all users have been found, now return if len of the users are equal
+}
