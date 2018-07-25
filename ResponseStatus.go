@@ -34,7 +34,7 @@ func (s *ResponseStatus) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if tmp.Response == "" {
-		return fmt.Errorf("Reponse-field is empty")
+		return fmt.Errorf("Response-field is empty")
 	}
 
 	s.Response = tmp.Response
