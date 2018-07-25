@@ -27,14 +27,9 @@ type CalendarEvent struct {
 	StartTime             time.Time      // starttime of the Event, correct timezone is set
 	EndTime               time.Time      // endtime of the event, correct timezone is set
 
-	Attendees      []Attendee // represents all attendees to this CalendarEvent
-	OrganizerName  string     // the name of the organizer from the e-mail, not reliable to identify anyone
-	OrganizerEMail string     // the e-mail address of the organizer, use this to identify the user
-}
-
-// GetEventTimes returns the begin-time and the end-time of the Calendar Event
-func (c CalendarEvent) GetEventTimes() (time.Time, time.Time) {
-	return c.StartTime, c.EndTime
+	Attendees      Attendees // represents all attendees to this CalendarEvent
+	OrganizerName  string    // the name of the organizer from the e-mail, not reliable to identify anyone
+	OrganizerEMail string    // the e-mail address of the organizer, use this to identify the user
 }
 
 // GetFirstAttendee returns the first Attendee that is not the organizer of the event from the Attendees array.
@@ -65,6 +60,16 @@ func (c CalendarEvent) PrettySimpleString() string {
 	return fmt.Sprintf("{ %v (%v) [%v - %v] }", c.Subject, c.GetFirstAttendee().Name, c.StartTime, c.EndTime)
 }
 
+// Equal returns wether the CalendarEvent is identical to the given CalendarEvent
+func (c CalendarEvent) Equal(other CalendarEvent) bool {
+	return c.ID == other.ID && c.Subject == other.Subject && c.Importance == other.Importance &&
+		c.Sensitivity == other.Sensitivity && c.IsAllDay == other.IsAllDay && c.IsCancelled == other.IsCancelled &&
+		c.IsOrganizer == other.IsCancelled && c.IsOrganizer == other.IsOrganizer && c.SeriesMasterID == other.SeriesMasterID &&
+		c.ShowAs == other.ShowAs && c.Type == other.Type && c.ResponseStatus == other.ResponseStatus &&
+		c.Attendees.Equal(other.Attendees) && c.OrganizerName == other.OrganizerName && c.OrganizerEMail == other.OrganizerEMail &&
+		c.StartTime.Equal(other.StartTime) && c.EndTime.Equal(other.EndTime)
+}
+
 // UnmarshalJSON implements the json unmarshal to be used by the json-library
 func (c *CalendarEvent) UnmarshalJSON(data []byte) error {
 	tmp := struct {
@@ -86,7 +91,7 @@ func (c *CalendarEvent) UnmarshalJSON(data []byte) error {
 		ResponseStatus        ResponseStatus    `json:"responseStatus"`
 		Start                 map[string]string `json:"start"`
 		End                   map[string]string `json:"end"`
-		Attendees             []Attendee        `json:"attendees"`
+		Attendees             Attendees         `json:"attendees"`
 		Organizer             struct {
 			EmailAddress struct {
 				Name    string `json:"name"`

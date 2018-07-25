@@ -45,6 +45,20 @@ func (c CalendarEvents) GetCalendarEventsAtCertainTime(givenTime time.Time) Cale
 	return events
 }
 
+// Equal returns true if the two CalendarEvent[] are equal. The order of the events doesn't matter
+func (c CalendarEvents) Equal(others CalendarEvents) bool {
+Outer:
+	for _, event := range c {
+		for _, toCompare := range others {
+			if event.Equal(toCompare) {
+				continue Outer
+			}
+		}
+		return false
+	}
+	return len(c) == len(others) // if we reach this, all CAlendarEvents in c have been found in others
+}
+
 // UnmarshalJSON implements the json unmarshal to be used by the json-library. The only
 // purpose of this overwrite is to immediately sort the []CalendarEvent by StartDateTime
 func (c *CalendarEvents) UnmarshalJSON(data []byte) error {
