@@ -115,11 +115,11 @@ func (c *CalendarEvent) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return fmt.Errorf("Can not time.Parse with RFC3339Nano lastModifiedDateTime %v: %v", tmp.LastModifiedDateTime, err)
 	}
-	c.OriginalStartTimeZone, err = time.LoadLocation(mapTimeZoneStrings(tmp.OriginalStartTimeZone))
+	c.OriginalStartTimeZone, err = mapTimeZoneStrings(tmp.OriginalStartTimeZone)
 	if err != nil {
 		return fmt.Errorf("Can not time.LoadLocation originalStartTimeZone %v: %v", tmp.OriginalStartTimeZone, err)
 	}
-	c.OriginalEndTimeZone, err = time.LoadLocation(mapTimeZoneStrings(tmp.OriginalEndTimeZone))
+	c.OriginalEndTimeZone, err = mapTimeZoneStrings(tmp.OriginalEndTimeZone)
 	if err != nil {
 		return fmt.Errorf("Can not time.LoadLocation originalEndTimeZone %v: %v", tmp.OriginalEndTimeZone, err)
 	}
@@ -184,18 +184,9 @@ func parseTimeAndLocation(timeToParse, locationToParse string) (time.Time, error
 }
 
 // mapTimeZoneStrings maps various Timezones used by Microsoft to go-understandable timezones or returns the source-zone if no mapping is found
-func mapTimeZoneStrings(timeZone string) string {
-	switch timeZone {
-	case "W. Europe Standard Time":
-		return "Europe/Vienna"
-	case "Central Europe Standard Time":
-		return "CET"
-	case "tzone://Microsoft/Utc":
-		return "UTC"
-	case "India Standard Time":
-		return "IST"
+func mapTimeZoneStrings(timeZone string) (*time.Location, error) {
+	if timeZone == "tzone://Microsoft/Custom" {
+		return FullDayEventTimeZone, nil
 	}
-	// TODO: Make this list bigger / improve this list with more synonyms or make a more dynamic workaround
-	// Hint: probably this could list all timezones and even enable to automatically determine the correct timezone: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/outlookuser_supportedtimezones
-	return timeZone
+	return globalSupportedTimeZones.GetTimeZoneByAlias(timeZone)
 }

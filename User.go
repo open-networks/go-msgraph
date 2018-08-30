@@ -56,6 +56,15 @@ func (u User) ListCalendarView(startDateTime, endDateTime time.Time) (CalendarEv
 	if u.graphClient == nil {
 		return CalendarEvents{}, ErrNotGraphClientSourced
 	}
+
+	if len(globalSupportedTimeZones.Value) == 0 {
+		var err error
+		globalSupportedTimeZones, err = u.getTimeZoneChoices()
+		if err != nil {
+			return CalendarEvents{}, err
+		}
+	}
+
 	resource := fmt.Sprintf("/users/%v/calendar/calendarview", u.ID)
 
 	// set GET-Params for start and end time
@@ -65,6 +74,17 @@ func (u User) ListCalendarView(startDateTime, endDateTime time.Time) (CalendarEv
 
 	var calendarEvents CalendarEvents
 	return calendarEvents, u.graphClient.makeGETAPICall(resource, getParams, &calendarEvents)
+}
+
+// getTimeZoneChoices grabs all supported time zones from microsoft for this user.
+// This should actually be the same for every user. Only used internally by this
+// msgraph package.
+//
+// See https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/outlookuser_supportedtimezones
+func (u User) getTimeZoneChoices() (supportedTimeZones, error) {
+	var ret supportedTimeZones
+	err := u.graphClient.makeGETAPICall(fmt.Sprintf("/users/%s/outlook/supportedTimeZones", u.ID), nil, &ret)
+	return ret, err
 }
 
 // GetActivePhone returns the space-trimmed active phone-number of the user. The active
