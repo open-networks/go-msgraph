@@ -180,20 +180,6 @@ func (g *GraphClient) ListGroups() (Groups, error) {
 	return marsh.Groups, err
 }
 
-// ListMembersOfGroup returns a list of users who are members to the group
-// identified by the given groupID.
-//
-// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list_members
-func (g *GraphClient) ListMembersOfGroup(groupID string) (Users, error) {
-	resource := fmt.Sprintf("/groups/%v/members", groupID)
-
-	var marsh struct {
-		Users Users `json:"value"`
-	}
-	marsh.Users.setGraphClient(g)
-	return marsh.Users, g.makeGETAPICall(resource, nil, &marsh)
-}
-
 // GetUser returns the user object associated to the given user identified by either
 // the given ID or userPrincipalName
 //

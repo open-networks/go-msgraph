@@ -13,14 +13,21 @@ type Group struct {
 	graphClient *GraphClient // the graphClient that called the group
 }
 
-// ListMembers lists all members of that group
+// ListMembers lists all members of the group, returns it as a Users-Instance. Only works
+// if the Group has been loaded via a graphClient.
 //
 // See https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list_members
 func (g Group) ListMembers() (Users, error) {
 	if g.graphClient == nil {
 		return nil, ErrNotGraphClientSourced
 	}
-	return g.graphClient.ListMembersOfGroup(g.ID)
+	resource := fmt.Sprintf("/groups/%v/members", g.ID)
+
+	var marsh struct {
+		Users Users `json:"value"`
+	}
+	marsh.Users.setGraphClient(g.graphClient)
+	return marsh.Users, g.graphClient.makeGETAPICall(resource, nil, &marsh)
 }
 
 func (g Group) String() string {
