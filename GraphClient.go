@@ -191,19 +191,6 @@ func (g *GraphClient) GetUser(identifier string) (User, error) {
 	return user, err
 }
 
-// ListUserCalendars returns all calendars associated to that user identified
-// by either the users ID or userPrincipalName
-//
-// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list_calendars
-func (g *GraphClient) ListUserCalendars(identifier string) (Calendars, error) {
-	resource := fmt.Sprintf("/users/%v/calendars", identifier)
-
-	var marsh struct {
-		Calendars Calendars `json:"value"`
-	}
-	return marsh.Calendars, g.makeGETAPICall(resource, nil, &marsh)
-}
-
 // ListCalendarView returns the CalendarEvents of the given user identified by
 // either the ID or the userPrincipalName within the specified start- and
 // endDateTime. The calendar used is the default calendar of the user.

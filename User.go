@@ -30,6 +30,21 @@ func (u *User) String() string {
 		u.UserPrincipalName, u.activePhone, u.graphClient != nil)
 }
 
+// ListCalendars returns all calendars associated to that user.
+//
+// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list_calendars
+func (u User) ListCalendars() (Calendars, error) {
+	if u.graphClient == nil {
+		return Calendars{}, ErrNotGraphClientSourced
+	}
+	resource := fmt.Sprintf("/users/%v/calendars", u.ID)
+
+	var marsh struct {
+		Calendars Calendars `json:"value"`
+	}
+	return marsh.Calendars, u.graphClient.makeGETAPICall(resource, nil, &marsh)
+}
+
 // ListCalendarView list's the users calendar view within the given time range.
 //
 // See https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list_calendarview
