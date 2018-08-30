@@ -191,6 +191,16 @@ func (g *GraphClient) GetUser(identifier string) (User, error) {
 	return user, err
 }
 
+// GetGroup returns the group object identified by the given groupID.
+//
+// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_get
+func (g *GraphClient) GetGroup(groupID string) (Group, error) {
+	resource := fmt.Sprintf("/groups/%v", groupID)
+	group := Group{graphClient: g}
+	err := g.makeGETAPICall(resource, nil, &group)
+	return group, err
+}
+
 // UnmarshalJSON implements the json unmarshal to be used by the json-library.
 // This method additionally to loading the TenantID, ApplicationID and ClientSecret
 // immediately gets a Token from msgraph (hence initialize this GraphAPI instance)

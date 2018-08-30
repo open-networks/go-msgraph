@@ -192,6 +192,42 @@ func TestGraphClient_GetUser(t *testing.T) {
 	}
 }
 
+func TestGraphClient_GetGroup(t *testing.T) {
+	tests := []struct {
+		name    string
+		g       *GraphClient
+		want    Group
+		wantErr bool
+	}{
+		{
+			name:    fmt.Sprintf("Test if Group %v is presnt and GetGroup-able", msGraphExistingGroupDisplayName),
+			g:       graphClient,
+			want:    Group{DisplayName: msGraphExistingGroupDisplayName},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			allGroups, err := tt.g.ListGroups()
+			if err != nil { // check if groups can be listed
+				t.Fatalf("GraphClient.ListGroups(): can not list groups: %v", err)
+			}
+			targetGroup, err := allGroups.GetByDisplayName(tt.want.DisplayName)
+			if err != nil { // check if the group to be tested is in the list
+				t.Fatalf("Groups.GetByDisplayName(): can not find group %v in %v, err: %v", tt.want.DisplayName, allGroups, err)
+			}
+			got, err := tt.g.GetGroup(targetGroup.ID) // actually execute the test we want to test
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GraphClient.GetGroup() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !(got.DisplayName == tt.want.DisplayName) {
+				t.Errorf("GraphClient.GetGroup() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestGraphClient_UnmarshalJSON(t *testing.T) {
 	TestEnvironmentVariablesPresent(t) // check prerequisites
 
