@@ -191,23 +191,6 @@ func (g *GraphClient) GetUser(identifier string) (User, error) {
 	return user, err
 }
 
-// ListCalendarView returns the CalendarEvents of the given user identified by
-// either the ID or the userPrincipalName within the specified start- and
-// endDateTime. The calendar used is the default calendar of the user.
-//
-// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/calendar_list_calendarview
-func (g *GraphClient) ListCalendarView(identifier string, startDateTime, endDateTime time.Time) (CalendarEvents, error) {
-	resource := fmt.Sprintf("/users/%v/calendar/calendarview", identifier)
-
-	// set GET-Params for start and end time
-	getParams := url.Values{}
-	getParams.Add("startdatetime", startDateTime.Format("2006-01-02T00:00:00"))
-	getParams.Add("enddatetime", endDateTime.Format("2006-01-02T00:00:00"))
-
-	var calendarEvents CalendarEvents
-	return calendarEvents, g.makeGETAPICall(resource, getParams, &calendarEvents)
-}
-
 // UnmarshalJSON implements the json unmarshal to be used by the json-library.
 // This method additionally to loading the TenantID, ApplicationID and ClientSecret
 // immediately gets a Token from msgraph (hence initialize this GraphAPI instance)

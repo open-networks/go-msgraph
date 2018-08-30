@@ -2,6 +2,7 @@ package msgraph
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -45,14 +46,25 @@ func (u User) ListCalendars() (Calendars, error) {
 	return marsh.Calendars, u.graphClient.makeGETAPICall(resource, nil, &marsh)
 }
 
-// ListCalendarView list's the users calendar view within the given time range.
+// ListCalendarView returns the CalendarEvents of the given user within the specified
+// start- and endDateTime. The calendar used is the default calendar of the user.
+// Returns an error if the user it not GraphClient sourced or if there is any error
+// during the API-call.
 //
 // See https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list_calendarview
-func (u User) ListCalendarView(startdate, enddate time.Time) (CalendarEvents, error) {
+func (u User) ListCalendarView(startDateTime, endDateTime time.Time) (CalendarEvents, error) {
 	if u.graphClient == nil {
 		return CalendarEvents{}, ErrNotGraphClientSourced
 	}
-	return u.graphClient.ListCalendarView(u.ID, startdate, enddate)
+	resource := fmt.Sprintf("/users/%v/calendar/calendarview", u.ID)
+
+	// set GET-Params for start and end time
+	getParams := url.Values{}
+	getParams.Add("startdatetime", startDateTime.Format("2006-01-02T00:00:00"))
+	getParams.Add("enddatetime", endDateTime.Format("2006-01-02T00:00:00"))
+
+	var calendarEvents CalendarEvents
+	return calendarEvents, u.graphClient.makeGETAPICall(resource, getParams, &calendarEvents)
 }
 
 // GetActivePhone returns the space-trimmed active phone-number of the user. The active
