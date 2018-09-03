@@ -13,6 +13,16 @@ type Group struct {
 	graphClient *GraphClient // the graphClient that called the group
 }
 
+func (g Group) String() string {
+	return fmt.Sprintf("Group(ID: \"%v\", DisplayName: \"%v\", Mail: \"%v\", MailEnabled: \"%v\", MailNickname: \"%v\", DirectAPIConnection: %v)",
+		g.ID, g.DisplayName, g.Mail, g.MailEnabled, g.MailNickname, g.graphClient != nil)
+}
+
+// setGraphClient sets the graphClient instance in this instance and all child-instances (if any)
+func (g *Group) setGraphClient(gC *GraphClient) {
+	g.graphClient = gC
+}
+
 // ListMembers lists all members of the group, returns it as a Users-Instance. Only works
 // if the Group has been loaded via a graphClient.
 //
@@ -28,9 +38,4 @@ func (g Group) ListMembers() (Users, error) {
 	}
 	marsh.Users.setGraphClient(g.graphClient)
 	return marsh.Users, g.graphClient.makeGETAPICall(resource, nil, &marsh)
-}
-
-func (g Group) String() string {
-	return fmt.Sprintf("Group(ID: \"%v\", DisplayName: \"%v\", Mail: \"%v\", MailEnabled: \"%v\", MailNickname: \"%v\", DirectAPIConnection: %v)",
-		g.ID, g.DisplayName, g.Mail, g.MailEnabled, g.MailNickname, g.graphClient != nil)
 }

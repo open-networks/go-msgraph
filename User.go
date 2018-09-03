@@ -31,6 +31,11 @@ func (u *User) String() string {
 		u.UserPrincipalName, u.activePhone, u.graphClient != nil)
 }
 
+// setGraphClient sets the graphClient instance in this instance and all child-instances (if any)
+func (u *User) setGraphClient(gC *GraphClient) {
+	u.graphClient = gC
+}
+
 // ListCalendars returns all calendars associated to that user.
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list_calendars

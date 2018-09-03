@@ -61,7 +61,7 @@ func (u Users) PrettySimpleString() string {
 // setGraphClient sets the GraphClient within that particular instance. Hence it's directly created by GraphClient
 func (u Users) setGraphClient(gC *GraphClient) Users {
 	for i := range u {
-		u[i].graphClient = gC
+		u[i].setGraphClient(gC)
 	}
 	return u
 }

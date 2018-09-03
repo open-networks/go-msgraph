@@ -1,6 +1,8 @@
 package msgraph
 
-import "strings"
+import (
+	"strings"
+)
 
 // Groups represents multiple Group-instances.
 type Groups []Group
@@ -13,6 +15,14 @@ func (g Groups) String() string {
 	return "Groups(" + strings.Join(groups, " | ") + ")"
 }
 
+// setGraphClient sets the GraphClient within that particular instance. Hence it's directly created by GraphClient
+func (g Groups) setGraphClient(gC *GraphClient) Groups {
+	for i := range g {
+		g[i].setGraphClient(gC)
+	}
+	return g
+}
+
 // GetByDisplayName returns the Group obj of that array whose DisplayName matches
 // the given name. Returns an ErrFindGroup if no group exists that matches the given
 // DisplayName.
@@ -23,12 +33,4 @@ func (g Groups) GetByDisplayName(displayName string) (Group, error) {
 		}
 	}
 	return Group{}, ErrFindGroup
-}
-
-// setGraphClient sets the GraphClient within that particular instance. Hence it's directly created by GraphClient
-func (g Groups) setGraphClient(gC *GraphClient) Groups {
-	for i := range g {
-		g[i].graphClient = gC
-	}
-	return g
 }
