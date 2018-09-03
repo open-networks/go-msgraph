@@ -43,7 +43,9 @@ func (u User) ListCalendars() (Calendars, error) {
 	var marsh struct {
 		Calendars Calendars `json:"value"`
 	}
-	return marsh.Calendars, u.graphClient.makeGETAPICall(resource, nil, &marsh)
+	err := u.graphClient.makeGETAPICall(resource, nil, &marsh)
+	marsh.Calendars.setGraphClient(u.graphClient)
+	return marsh.Calendars, err
 }
 
 // ListCalendarView returns the CalendarEvents of the given user within the specified

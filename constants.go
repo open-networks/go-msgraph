@@ -30,6 +30,8 @@ var (
 	ErrFindUser = errors.New("unable to find user")
 	// ErrFindGroup is returned on any func that tries to find a group with the given parameters that can not be found
 	ErrFindGroup = errors.New("unable to find group")
+	// ErrFindCalendar is returned on any func that tries to find a calendar with the given parameters that can not be found
+	ErrFindCalendar = errors.New("unable to find calendar")
 	// ErrNotGraphClientSourced is returned if e.g. a ListMembers() is called but the Group has not been created by a graphClient query
 	ErrNotGraphClientSourced = errors.New("Instance is not created from a GraphClient API-Call, can not directly get further information")
 )
