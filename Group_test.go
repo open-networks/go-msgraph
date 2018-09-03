@@ -1,17 +1,25 @@
 package msgraph
 
 import (
+	"fmt"
 	"testing"
 )
 
-func TestGroup_ListMembers(t *testing.T) {
+func GetTestGroup(t *testing.T) Group {
 	TestEnvironmentVariablesPresent(t) // checks the env-variables and failsNow if any is missing
-
-	groups, _ := graphClient.ListGroups()
-	groupTest, err := groups.GetByDisplayName(msGraphExistingGroupDisplayName) // if that failed we dont have to check the err because the test will fail anyway
+	groups, err := graphClient.ListGroups()
 	if err != nil {
-		t.Fatalf("Group \"%v\" not found in %v", msGraphExistingGroupDisplayName, groups)
+		t.Fatalf("Can not GraphClient.ListGroups(): %v", err)
 	}
+	groupTest, err := groups.GetByDisplayName(msGraphExistingGroupDisplayName)
+	if err != nil {
+		t.Fatalf("Can not groups.GetByDisplayName(%v): %v", msGraphExistingGroupDisplayName, err)
+	}
+	return groupTest
+}
+
+func TestGroup_ListMembers(t *testing.T) {
+	groupTest := GetTestGroup(t)
 
 	tests := []struct {
 		name    string
@@ -46,6 +54,30 @@ func TestGroup_ListMembers(t *testing.T) {
 			}
 			if !found && len(tt.want) > 0 {
 				t.Errorf("GraphClient.ListGroups() = %v, searching for one of %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGroup_String(t *testing.T) {
+	testGroup := GetTestGroup(t)
+
+	tests := []struct {
+		name string
+		g    Group
+		want string
+	}{
+		{
+			name: "Test All Groups",
+			g:    testGroup,
+			want: fmt.Sprintf("Group(ID: \"%v\", Description: \"%v\" DisplayName: \"%v\", CreatedDateTime: \"%v\", GroupTypes: \"%v\", Mail: \"%v\", MailEnabled: \"%v\", MailNickname: \"%v\", OnPremisesLastSyncDateTime: \"%v\", OnPremisesSecurityIdentifier: \"%v\", OnPremisesSyncEnabled: \"%v\", ProxyAddresses: \"%v\", SecurityEnabled \"%v\", Visibility: \"%v\", DirectAPIConnection: %v)",
+				testGroup.ID, testGroup.Description, testGroup.DisplayName, testGroup.CreatedDateTime, testGroup.GroupTypes, testGroup.Mail, testGroup.MailEnabled, testGroup.MailNickname, testGroup.OnPremisesLastSyncDateTime, testGroup.OnPremisesSecurityIdentifier, testGroup.OnPremisesSyncEnabled, testGroup.ProxyAddresses, testGroup.SecurityEnabled, testGroup.Visibility, testGroup.graphClient != nil),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.g.String(); got != tt.want {
+				t.Errorf("Group.String() = %v, want %v", got, tt.want)
 			}
 		})
 	}
