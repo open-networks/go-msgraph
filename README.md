@@ -45,10 +45,10 @@ users, err := graphClient.ListUsers()
 user, err := graphClient.GetUser("humpty@contoso.com") 
 // List all groups
 groups, err := graphClient.ListGroups()
-// List all members of the given group identified by the groupID. Only the real ID works here
-groupmembers, err := graphClient.ListMembersOfGroup("... long user id ...")
-// Lists all Calendars of a user, use userPrincialName or its ID to identify the user
-calendars, err := graphClient.ListUserCalendars("dumpty@contoso.com")
+// List all members of a group.
+groupMembers, err := groups[0].ListMembers()
+// Lists all Calendars of a user
+calendars, err := user.ListCalendars()
 
 // Let all full-day calendar events that are loaded from ms graph be set to timezone Europe/Vienna:
 // Standard is time.Local
