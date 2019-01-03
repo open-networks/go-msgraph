@@ -23,7 +23,18 @@ func (s supportedTimeZones) GetTimeZoneByAlias(alias string) (*time.Location, er
 			return searchItem.TimeLoc, nil
 		}
 	}
-	return nil, fmt.Errorf("Could not find given time.Location for %v", alias)
+	return nil, fmt.Errorf("Could not find given time.Location for Alias %v", alias)
+}
+
+// GetTimeZoneByAlias searches in the given set of supportedTimeZones for the TimeZone with the given alias. Returns
+// either the time.Location or an error if it can not be found.
+func (s supportedTimeZones) GetTimeZoneByDisplayName(displayName string) (*time.Location, error) {
+	for _, searchItem := range s.Value {
+		if searchItem.DisplayName == displayName {
+			return searchItem.TimeLoc, nil
+		}
+	}
+	return nil, fmt.Errorf("Could not find given time.Location for DisplayName %v", displayName)
 }
 
 // supportedTimeZone represents one instance grabbed by https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/outlookuser_supportedtimezones
@@ -126,6 +137,7 @@ var WinIANA = map[string]string{
 	"(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna":  "Europe/Berlin",
 	"(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague": "Europe/Budapest",
 	"(UTC+01:00) Brussels, Copenhagen, Madrid, Paris":               "Europe/Paris",
+	"(UTC+01:00) Casablanca":                                        "Africa/Casablanca",
 	"(UTC+01:00) Sarajevo, Skopje, Warsaw, Zagreb":                  "Europe/Warsaw",
 	"(UTC+01:00) West Central Africa":                               "Africa/Lagos",
 	"(UTC+01:00) Windhoek":                                          "Africa/Windhoek",
@@ -148,6 +160,7 @@ var WinIANA = map[string]string{
 	"(UTC+03:00) Baghdad":                                           "Asia/Baghdad",
 	"(UTC+03:00) Kuwait, Riyadh":                                    "Asia/Riyadh",
 	"(UTC+03:00) Minsk":                                             "Europe/Minsk",
+	"(UTC+03:00) Moscow, St. Petersburg":                            "Europe/Moscow",
 	"(UTC+03:00) Moscow, St. Petersburg, Volgograd":                 "Europe/Moscow",
 	"(UTC+03:00) Nairobi":                                           "Africa/Nairobi",
 	"(UTC+03:30) Tehran":                                            "Asia/Tehran",
@@ -155,9 +168,10 @@ var WinIANA = map[string]string{
 	"(UTC+04:00) Astrakhan, Ulyanovsk":                              "Europe/Samara",
 	"(UTC+04:00) Baku":                                              "Asia/Baku",
 	"(UTC+04:00) Izhevsk, Samara":                                   "Europe/Samara",
-	"(UTC+04:00) Saratov":                                           "Europe/Saratov",
 	"(UTC+04:00) Port Louis":                                        "Indian/Mauritius",
+	"(UTC+04:00) Saratov":                                           "Europe/Saratov",
 	"(UTC+04:00) Tbilisi":                                           "Asia/Tbilisi",
+	"(UTC+04:00) Volgograd":                                         "Europe/Volgograd",
 	"(UTC+04:00) Yerevan":                                           "Asia/Yerevan",
 	"(UTC+04:30) Kabul":                                             "Asia/Kabul",
 	"(UTC+05:00) Ashgabat, Tashkent":                                "Asia/Tashkent",
