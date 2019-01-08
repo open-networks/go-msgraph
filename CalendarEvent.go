@@ -44,7 +44,7 @@ func (c CalendarEvent) GetFirstAttendee() Attendee {
 	return Attendee{Name: "None"}
 }
 
-func (c *CalendarEvent) String() string {
+func (c CalendarEvent) String() string {
 	return fmt.Sprintf("CalendarEvent(ID: \"%v\", CreatedDateTime: \"%v\", LastModifiedDateTime: \"%v\", "+
 		"ICalUId: \"%v\", Subject: \"%v\", "+
 		"Importance: \"%v\", Sensitivity: \"%v\", IsAllDay: \"%v\", IsCancelled: \"%v\", "+
@@ -62,12 +62,12 @@ func (c CalendarEvent) PrettySimpleString() string {
 
 // Equal returns wether the CalendarEvent is identical to the given CalendarEvent
 func (c CalendarEvent) Equal(other CalendarEvent) bool {
-	return c.ID == other.ID && c.Subject == other.Subject && c.Importance == other.Importance &&
-		c.Sensitivity == other.Sensitivity && c.IsAllDay == other.IsAllDay && c.IsCancelled == other.IsCancelled &&
-		c.IsOrganizer == other.IsCancelled && c.IsOrganizer == other.IsOrganizer && c.SeriesMasterID == other.SeriesMasterID &&
-		c.ShowAs == other.ShowAs && c.Type == other.Type && c.ResponseStatus == other.ResponseStatus &&
-		c.Attendees.Equal(other.Attendees) && c.OrganizerName == other.OrganizerName && c.OrganizerEMail == other.OrganizerEMail &&
-		c.StartTime.Equal(other.StartTime) && c.EndTime.Equal(other.EndTime)
+	return c.ID == other.ID && c.CreatedDateTime.Equal(other.CreatedDateTime) && c.LastModifiedDateTime.Equal(other.LastModifiedDateTime) &&
+		c.ICalUID == other.ICalUID && c.Subject == other.Subject && c.Importance == other.Importance && c.Sensitivity == other.Sensitivity &&
+		c.IsAllDay == other.IsAllDay && c.IsCancelled == other.IsCancelled && c.IsOrganizer == other.IsOrganizer &&
+		c.SeriesMasterID == other.SeriesMasterID && c.ShowAs == other.ShowAs && c.Type == other.Type && c.ResponseStatus.Equal(other.ResponseStatus) &&
+		c.StartTime.Equal(other.StartTime) && c.EndTime.Equal(other.EndTime) &&
+		c.Attendees.Equal(other.Attendees) && c.OrganizerName == other.OrganizerName && c.OrganizerEMail == other.OrganizerEMail
 }
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library
