@@ -177,6 +177,7 @@ var WinIANA = map[string]string{
 	"(UTC+05:00) Ashgabat, Tashkent":                                "Asia/Tashkent",
 	"(UTC+05:00) Ekaterinburg":                                      "Asia/Yekaterinburg",
 	"(UTC+05:00) Islamabad, Karachi":                                "Asia/Karachi",
+	"(UTC+05:00) Qyzylorda":                                         "Asia/Qyzylorda",
 	"(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi":               "Asia/Calcutta",
 	"(UTC+05:30) Sri Jayawardenepura":                               "Asia/Colombo",
 	"(UTC+05:45) Kathmandu":                                         "Asia/Kathmandu",
