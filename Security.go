@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Alert represents a security alert.
 type Alert struct {
 	ActivityGroupName    string                    `json:"activityGroupName"`
 	AssignedTo           string                    `json:"assignedTo"`
@@ -42,12 +43,14 @@ type Alert struct {
 	VulnerabilityStates  []VulnerabilityState      `json:"vulnerabilityStates"`
 }
 
+// CloudAppSecurityState contains stateful information about a cloud application related to an alert.
 type CloudAppSecurityState struct {
 	DestinationServiceIP   net.IP `json:"destinationServiceIp"`
 	DestinationServiceName string `json:"destinationServiceName"`
 	RiskScore              string `json:"riskScore"`
 }
 
+// FileSecurityState contains information about a file (not process) related to an alert.
 type FileSecurityState struct {
 	FileHash  FileHash `json:"fileHash"`
 	Name      string   `json:"name"`
@@ -55,11 +58,13 @@ type FileSecurityState struct {
 	RiskScore string   `json:"riskScore"`
 }
 
+// FileHash contains hash information related to a file.
 type FileHash struct {
 	HashType  string `json:"hashType"`
 	HashValue string `json:"hashValue"`
 }
 
+// HostSecurityState contains information about a host (computer, device, etc.) related to an alert.
 type HostSecurityState struct {
 	FQDN                      string `json:"fqdn"`
 	IsAzureAADJoined          bool   `json:"isAzureAadJoined"`
@@ -72,6 +77,7 @@ type HostSecurityState struct {
 	RiskScore                 string `json:"riskScore"`
 }
 
+// MalwareState contains information about a malware entity.
 type MalwareState struct {
 	Category   string `json:"category"`
 	Family     string `json:"family"`
@@ -80,6 +86,7 @@ type MalwareState struct {
 	WasRunning bool   `json:"wasRunning"`
 }
 
+// NetworkConnection contains stateful information describing a network connection related to an alert.
 type NetworkConnection struct {
 	ApplicationName          string    `json:"applicationName"`
 	DestinationAddress       net.IP    `json:"destinationAddress"`
@@ -103,6 +110,7 @@ type NetworkConnection struct {
 	URLParameters            string    `json:"urlParameters"`
 }
 
+// Process describes a process related to an alert.
 type Process struct {
 	AccountName                  string    `json:"accountName"`
 	CommandLine                  string    `json:"commandLine"`
@@ -118,6 +126,7 @@ type Process struct {
 	ProcessID                    int32     `json:"processId"`
 }
 
+// RegistryKeyState contains information about registry key changes related to an alert, and about the process which changed the keys.
 type RegistryKeyState struct {
 	Hive         string `json:"hive"`
 	Key          string `json:"key"`
@@ -131,17 +140,20 @@ type RegistryKeyState struct {
 	ValueType    string `json:"valueType"`
 }
 
+// SecurityResource represents resources related to an alert.
 type SecurityResource struct {
 	Resource     string `json:"resource"`
 	ResourceType string `json:"resourceType"`
 }
 
+// AlertTrigger contains information about a property which triggered an alert detection.
 type AlertTrigger struct {
 	Name  string `json:"name"`
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }
 
+// UserSecurityState contains stateful information about a user account related to an alert.
 type UserSecurityState struct {
 	AADUserID                    string    `json:"aadUserId"`
 	AccountName                  string    `json:"accountName"`
@@ -159,6 +171,7 @@ type UserSecurityState struct {
 	UserPrincipalName            string    `json:"userPrincipalName"`
 }
 
+// SecurityVendorInformation contains details about the vendor of a particular security product.
 type SecurityVendorInformation struct {
 	Provider        string `json:"provider"`
 	ProviderVersion string `json:"providerVersion"`
@@ -166,12 +179,14 @@ type SecurityVendorInformation struct {
 	Vendor          string `json:"vendor"`
 }
 
+// VulnerabilityState contains information about a particular vulnerability.
 type VulnerabilityState struct {
 	CVE        string `json:"cve"`
 	Severity   string `json:"severity"`
 	WasRunning bool   `json:"wasRunning"`
 }
 
+// ListAlerts returns a slice of Alert objects from MS Graph's security API. Each Alert represents a security event reported by some component.
 func (g *GraphClient) ListAlerts() ([]Alert, error) {
 	resource := "/security/alerts"
 	var marsh struct {
@@ -181,6 +196,7 @@ func (g *GraphClient) ListAlerts() ([]Alert, error) {
 	return marsh.Alerts, err
 }
 
+// SecureScore represents the security score of a tenant for a particular day.
 type SecureScore struct {
 	ID                       string                    `json:"id"`
 	AzureTenantID            string                    `json:"azureTenantId"`
@@ -195,11 +211,14 @@ type SecureScore struct {
 	VendorInformation        SecurityVendorInformation `json:"vendorInformation"`
 }
 
+// AverageComparativeScore describes average scores across a variety of different scopes.
+// The Basis field may contain the strings "AllTenants", "TotalSeats", or "IndustryTypes".
 type AverageComparativeScore struct {
 	Basis        string  `json:"basis"`
 	AverageScore float64 `json:"averageScore"`
 }
 
+// ControlScore contains a score for a single security control.
 type ControlScore struct {
 	ControlName     string  `json:"controlName"`
 	Score           float64 `json:"score"`
@@ -207,6 +226,8 @@ type ControlScore struct {
 	Description     string  `json:"description"`
 }
 
+// ListSecureScores returns a slice of SecureScore objects. Each SecureScore represents
+// a tenant's security score for a particular day.
 func (g *GraphClient) ListSecureScores() ([]SecureScore, error) {
 	resource := "/security/secureScores"
 	var marsh struct {
@@ -216,6 +237,8 @@ func (g *GraphClient) ListSecureScores() ([]SecureScore, error) {
 	return marsh.Scores, err
 }
 
+// SecureScoreControlProfile describes in greater detail the parameters of a given security
+// score control.
 type SecureScoreControlProfile struct {
 	ID                    string                          `json:"id"`
 	AzureTenantID         string                          `json:"azureTenantId"`
@@ -239,16 +262,20 @@ type SecureScoreControlProfile struct {
 	VendorInformation     SecurityVendorInformation       `json:"vendorInformation"`
 }
 
+// ComplianceInformation contains compliance data associated with a secure score control.
 type ComplianceInformation struct {
 	CertificationName     string                 `json:"certificationName"`
 	CertificationControls []CertificationControl `json:"certificationControls"`
 }
 
+// CertificationControl contains compliance certification data associated with a secure score control.
 type CertificationControl struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
 
+// SecureScoreControlStateUpdate records a particular historical state of the control state
+// as updated by the user.
 type SecureScoreControlStateUpdate struct {
 	AssignedTo      string    `json:"assignedTo"`
 	Comment         string    `json:"comment"`
@@ -257,6 +284,9 @@ type SecureScoreControlStateUpdate struct {
 	UpdatedDateTime time.Time `json:"updatedDateTime"`
 }
 
+// ListSecureScoreControlProfiles returns a slice of SecureScoreControlProfile objects.
+// Each object represents a secure score control profile, which is used when calculating
+// a tenant's secure score.
 func (g *GraphClient) ListSecureScoreControlProfiles() ([]SecureScoreControlProfile, error) {
 	resource := "/security/secureScoreControlProfiles"
 	var marsh struct {
