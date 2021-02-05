@@ -49,6 +49,26 @@ func NewGraphClient(tenantID, applicationID, clientSecret string) (*GraphClient,
 	return &g, g.refreshToken()
 }
 
+// NewGraphClientWithToken creates a new GraphClient instance with the given token.
+func NewGraphClientWithToken(tenantID, applicationID string, token Token) (*GraphClient, error) {
+	g := GraphClient{
+		TenantID:      tenantID,
+		ApplicationID: applicationID,
+		token:         token,
+	}
+	return &g, nil
+}
+
+// GetMe returns the user of the current context.
+//
+// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_get
+func (g *GraphClient) GetMe() (User, error) {
+	resource := "/me"
+	user := User{graphClient: g}
+	err := g.makeGETAPICall(resource, nil, &user)
+	return user, err
+}
+
 // refreshToken refreshes the current Token. Grab's a new one and saves it within the GraphClient instance
 func (g *GraphClient) refreshToken() error {
 	if g.TenantID == "" {
