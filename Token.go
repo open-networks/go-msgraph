@@ -15,6 +15,17 @@ type Token struct {
 	AccessToken string    // the access-token itself
 }
 
+// NewStaticToken creates a token that is used to authenticate to the MS Graph API but is not meant to be refreshed. It is meant to be
+// used in delegation use cases.
+func NewStaticToken(accessToken string) Token {
+	return Token{
+		TokenType:   "Bearer",
+		ExpiresOn:   time.Now().Add(time.Hour * 1000000),
+		Resource:    BaseURL,
+		AccessToken: accessToken,
+	}
+}
+
 func (t Token) String() string {
 	return fmt.Sprintf("Token {TokenType: \"%v\", NotBefore: \"%v\", ExpiresOn: \"%v\", "+
 		"Resource: \"%v\", AccessToken: \"%v\"}",
