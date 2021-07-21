@@ -34,7 +34,7 @@ func TestCalendars_GetByName(t *testing.T) {
 		{
 			name:    "Find valid Calendar",
 			c:       testCalendars,
-			args:    args{name: "Kalender"},
+			args:    args{name: msGraphExistingCalendarsOfUser[0]},
 			wantErr: false,
 		}, {
 			name:    "non-existing calendar",

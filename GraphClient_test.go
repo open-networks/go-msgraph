@@ -3,16 +3,24 @@ package msgraph
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 )
 
 // get graph client config from environment
 var (
-	msGraphTenantID                     = os.Getenv("MSGraphTenantID")
-	msGraphApplicationID                = os.Getenv("MSGraphApplicationID")
-	msGraphClientSecret                 = os.Getenv("MSGraphClientSecret")
-	msGraphExistingGroupDisplayName     = os.Getenv("MSGraphExistingGroupDisplayName")
+	// Microsoft Graph tenant ID
+	msGraphTenantID = os.Getenv("MSGraphTenantID")
+	// Microsoft Graph Application ID
+	msGraphApplicationID = os.Getenv("MSGraphApplicationID")
+	// Microsoft Graph Client Secret
+	msGraphClientSecret = os.Getenv("MSGraphClientSecret")
+	// a valid groupdisplayname from msgraph, e.g. technicians@contoso.com
+	msGraphExistingGroupDisplayName = os.Getenv("MSGraphExistingGroupDisplayName")
+	// a valid userprincipalname in the above group, e.g. felix@contoso.com
 	msGraphExistingUserPrincipalInGroup = os.Getenv("MSGraphExistingUserPrincipalInGroup")
+	// valid calendar names that belong to the above user, sepearated by a colon (","). e.g.: "Kalender,Feiertage in Österreich,Geburtstage"
+	msGraphExistingCalendarsOfUser = strings.Split(os.Getenv("MSGraphExistingCalendarsOfUser"), ",")
 )
 
 // the graphclient used to perform all tests
@@ -33,6 +41,9 @@ func TestEnvironmentVariablesPresent(t *testing.T) {
 	}
 	if msGraphExistingUserPrincipalInGroup == "" {
 		t.Fatal("Environment Variable for an existing user in the group named <MSGraphExistingUserPrincipalInGroup> is missing!")
+	}
+	if msGraphExistingCalendarsOfUser[0] == "" {
+		t.Fatal("Environment Variable for existing calendars of the given user named <MSGraphExistingCalendarsOfUser> is missing!")
 	}
 }
 

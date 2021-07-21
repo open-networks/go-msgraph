@@ -48,6 +48,11 @@ func TestUser_getTimeZoneChoices(t *testing.T) {
 func TestUser_ListCalendars(t *testing.T) {
 	userToTest := GetTestUser(t)
 
+	var wantedCalendars []Calendar
+	for _, calendarName := range msGraphExistingCalendarsOfUser {
+		wantedCalendars = append(wantedCalendars, Calendar{Name: calendarName})
+	}
+
 	tests := []struct {
 		name    string
 		u       User
@@ -57,7 +62,7 @@ func TestUser_ListCalendars(t *testing.T) {
 		{
 			name:    "List All Calendars",
 			u:       userToTest,
-			want:    Calendars{Calendar{Name: "Kalender"}, Calendar{Name: "Feiertage in Österreich"}, Calendar{Name: "Geburtstage"}},
+			want:    wantedCalendars,
 			wantErr: false,
 		},
 	}
