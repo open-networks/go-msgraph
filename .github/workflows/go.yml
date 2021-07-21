@@ -21,9 +21,9 @@ jobs:
 
     - name: Test
       env:
-        MSGraphTenantID: ${{ secrets.MSGraphTenantID }}:
-        MSGraphApplicationID: ${{ secrets.MSGraphApplicationID }}:
-        MSGraphClientSecret: ${{ secrets.MSGraphClientSecret }}:
-        MSGraphExistingGroupDisplayName: ${{ secrets.MSGraphExistingGroupDisplayName }}:
+        MSGraphTenantID: ${{ secrets.MSGraphTenantID }}
+        MSGraphApplicationID: ${{ secrets.MSGraphApplicationID }}
+        MSGraphClientSecret: ${{ secrets.MSGraphClientSecret }}
+        MSGraphExistingGroupDisplayName: ${{ secrets.MSGraphExistingGroupDisplayName }}
         MSGraphExistingUserPrincipalInGroup: ${{ secrets.MSGraphExistingUserPrincipalInGroup }}
       run: go test -v ./...
