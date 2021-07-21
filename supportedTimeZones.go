@@ -154,6 +154,7 @@ var WinIANA = map[string]string{
 	"(UTC+02:00) Istanbul":                                          "Europe/Istanbul",
 	"(UTC+03:00) Istanbul":                                          "Europe/Istanbul",
 	"(UTC+02:00) Jerusalem":                                         "Asia/Jerusalem",
+	"(UTC+02:00) Juba":                                              "Africa/Juba",
 	"(UTC+02:00) Kaliningrad":                                       "Europe/Kaliningrad",
 	"(UTC+02:00) Windhoek":                                          "Africa/Windhoek",
 	"(UTC+02:00) Khartoum":                                          "Africa/Khartoum",
