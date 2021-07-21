@@ -6,12 +6,12 @@ import (
 )
 
 // GetTestUser returns a valid User instance for testing. Will issue a t.Fatalf if the
-// user can not be loaded
+// user cannot be loaded
 func GetTestUser(t *testing.T) User {
 	TestEnvironmentVariablesPresent(t)
 	userToTest, errUserToTest := graphClient.GetUser(msGraphExistingUserPrincipalInGroup)
 	if errUserToTest != nil {
-		t.Fatalf("Can not find user %v for Testing", msGraphExistingUserPrincipalInGroup)
+		t.Fatalf("Cannot find user %v for Testing", msGraphExistingUserPrincipalInGroup)
 	}
 	return userToTest
 }

@@ -34,13 +34,13 @@ func (s *ResponseStatus) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if tmp.Response == "" {
-		return fmt.Errorf("Response-field is empty")
+		return fmt.Errorf("response-field is empty")
 	}
 
 	s.Response = tmp.Response
 	s.Time, err = time.Parse(time.RFC3339Nano, tmp.Timestamp) // the timeZone is normally ALWAYS UTC, microsoft converts time date & time to that, but it does not matter here
 	if err != nil {
-		return fmt.Errorf("Can not parse timestamp with RFC3339Nano: %v", err)
+		return fmt.Errorf("cannot parse timestamp with RFC3339Nano: %v", err)
 	}
 
 	return nil

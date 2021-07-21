@@ -103,25 +103,25 @@ func (c *CalendarEvent) UnmarshalJSON(data []byte) error {
 	var err error
 	// unmarshal to tmp-struct, return if error
 	if err = json.Unmarshal(data, &tmp); err != nil {
-		return fmt.Errorf("Error on json.Unmarshal: %v | Data: %v", err, string(data))
+		return fmt.Errorf("error on json.Unmarshal: %v | Data: %v", err, string(data))
 	}
 
 	c.ID = tmp.ID
 	c.CreatedDateTime, err = time.Parse(time.RFC3339Nano, tmp.CreatedDateTime)
 	if err != nil {
-		return fmt.Errorf("Can not time.Parse with RFC3339Nano createdDateTime %v: %v", tmp.CreatedDateTime, err)
+		return fmt.Errorf("cannot time.Parse with RFC3339Nano createdDateTime %v: %v", tmp.CreatedDateTime, err)
 	}
 	c.LastModifiedDateTime, err = time.Parse(time.RFC3339Nano, tmp.LastModifiedDateTime)
 	if err != nil {
-		return fmt.Errorf("Can not time.Parse with RFC3339Nano lastModifiedDateTime %v: %v", tmp.LastModifiedDateTime, err)
+		return fmt.Errorf("cannot time.Parse with RFC3339Nano lastModifiedDateTime %v: %v", tmp.LastModifiedDateTime, err)
 	}
 	c.OriginalStartTimeZone, err = mapTimeZoneStrings(tmp.OriginalStartTimeZone)
 	if err != nil {
-		return fmt.Errorf("Can not time.LoadLocation originalStartTimeZone %v: %v", tmp.OriginalStartTimeZone, err)
+		return fmt.Errorf("cannot time.LoadLocation originalStartTimeZone %v: %v", tmp.OriginalStartTimeZone, err)
 	}
 	c.OriginalEndTimeZone, err = mapTimeZoneStrings(tmp.OriginalEndTimeZone)
 	if err != nil {
-		return fmt.Errorf("Can not time.LoadLocation originalEndTimeZone %v: %v", tmp.OriginalEndTimeZone, err)
+		return fmt.Errorf("cannot time.LoadLocation originalEndTimeZone %v: %v", tmp.OriginalEndTimeZone, err)
 	}
 	c.ICalUID = tmp.ICalUID
 	c.Subject = tmp.Subject
@@ -141,11 +141,11 @@ func (c *CalendarEvent) UnmarshalJSON(data []byte) error {
 	// Parse event start & endtime with timezone
 	c.StartTime, err = parseTimeAndLocation(tmp.Start["dateTime"], tmp.Start["timeZone"]) // the timeZone is normally ALWAYS UTC, microsoft converts time date & time to that
 	if err != nil {
-		return fmt.Errorf("Can not parse start-dateTime %v AND timeZone %v: %v", tmp.Start["dateTime"], tmp.Start["timeZone"], err)
+		return fmt.Errorf("cannot parse start-dateTime %v AND timeZone %v: %v", tmp.Start["dateTime"], tmp.Start["timeZone"], err)
 	}
 	c.EndTime, err = parseTimeAndLocation(tmp.End["dateTime"], tmp.End["timeZone"]) // the timeZone is normally ALWAYS UTC, microsoft converts time date & time to that
 	if err != nil {
-		return fmt.Errorf("Can not parse end-dateTime %v AND timeZone %v: %v", tmp.End["dateTime"], tmp.End["timeZone"], err)
+		return fmt.Errorf("cannot parse end-dateTime %v AND timeZone %v: %v", tmp.End["dateTime"], tmp.End["timeZone"], err)
 	}
 
 	// Hint: OriginalStartTimeZone & end are UTC (set by microsoft) if it is a full-day event, this will be handled in the next section

@@ -9,7 +9,7 @@ import (
 type Users []User
 
 // GetUserByShortName returns the first User object that has the given shortName.
-// Will return an error ErrFindUser if the user can not be found
+// Will return an error ErrFindUser if the user cannot be found
 func (u Users) GetUserByShortName(shortName string) (User, error) {
 	for _, user := range u {
 		if user.GetShortName() == shortName {
@@ -20,7 +20,7 @@ func (u Users) GetUserByShortName(shortName string) (User, error) {
 }
 
 // GetUserByActivePhone returns the User-instance whose activeNumber equals the given phone number.
-// Will return an error ErrFindUser if the user can not be found
+// Will return an error ErrFindUser if the user cannot be found
 func (u Users) GetUserByActivePhone(activePhone string) (User, error) {
 	for _, user := range u {
 		if user.GetActivePhone() == activePhone {
@@ -31,7 +31,7 @@ func (u Users) GetUserByActivePhone(activePhone string) (User, error) {
 }
 
 // GetUserByMail returns the User-instance that e-mail address matches the given e-mail addr.
-// Will return an error ErrFindUser if the user can not be found.
+// Will return an error ErrFindUser if the user cannot be found.
 func (u Users) GetUserByMail(email string) (User, error) {
 	for _, user := range u {
 		if user.Mail == email {

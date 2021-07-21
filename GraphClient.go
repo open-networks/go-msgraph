@@ -41,7 +41,7 @@ func (g *GraphClient) String() string {
 
 // NewGraphClient creates a new GraphClient instance with the given parameters and grab's a token.
 //
-// Rerturns an error if the token can not be initialized. This method does not have to be used to create a new GraphClient
+// Rerturns an error if the token cannot be initialized. This method does not have to be used to create a new GraphClient
 func NewGraphClient(tenantID, applicationID, clientSecret string) (*GraphClient, error) {
 	g := GraphClient{TenantID: tenantID, ApplicationID: applicationID, ClientSecret: clientSecret}
 	g.apiCall.Lock()         // lock because we will refresh the token
@@ -52,7 +52,7 @@ func NewGraphClient(tenantID, applicationID, clientSecret string) (*GraphClient,
 // refreshToken refreshes the current Token. Grab's a new one and saves it within the GraphClient instance
 func (g *GraphClient) refreshToken() error {
 	if g.TenantID == "" {
-		return fmt.Errorf("Tenant ID is empty")
+		return fmt.Errorf("tenant ID is empty")
 	}
 	resource := fmt.Sprintf("/%v/oauth2/token", g.TenantID)
 	data := url.Values{}
@@ -63,7 +63,7 @@ func (g *GraphClient) refreshToken() error {
 
 	u, err := url.ParseRequestURI(LoginBaseURL)
 	if err != nil {
-		return fmt.Errorf("Unable to parse URI: %v", err)
+		return fmt.Errorf("unable to parse URI: %v", err)
 	}
 
 	u.Path = resource
@@ -79,7 +79,7 @@ func (g *GraphClient) refreshToken() error {
 	var newToken Token
 	err = g.performRequest(req, &newToken) // perform the prepared request
 	if err != nil {
-		return fmt.Errorf("Error on getting msgraph Token: %v", err)
+		return fmt.Errorf("error on getting msgraph Token: %v", err)
 	}
 	g.token = newToken
 	return err
@@ -99,7 +99,7 @@ func (g *GraphClient) makeGETAPICall(apicall string, getParams url.Values, v int
 
 	reqURL, err := url.ParseRequestURI(BaseURL)
 	if err != nil {
-		return fmt.Errorf("Unable to parse URI %v: %v", BaseURL, err)
+		return fmt.Errorf("unable to parse URI %v: %v", BaseURL, err)
 	}
 
 	// Add Version to API-Call, the leading slash is always added by the calling func
@@ -139,7 +139,7 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 
 	body, err := ioutil.ReadAll(resp.Body) // read body first to append it to the error (if any)
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		// Hint: this will mostly be the case if the tenant ID can not be found, the Application ID can not be found or the clientSecret is incorrect.
+		// Hint: this will mostly be the case if the tenant ID cannot be found, the Application ID cannot be found or the clientSecret is incorrect.
 		// The cause will be described in the body, hence we have to return the body too for proper error-analysis
 		return fmt.Errorf("StatusCode is not OK: %v. Body: %v ", resp.StatusCode, string(body))
 	}
@@ -204,7 +204,7 @@ func (g *GraphClient) GetGroup(groupID string) (Group, error) {
 // UnmarshalJSON implements the json unmarshal to be used by the json-library.
 // This method additionally to loading the TenantID, ApplicationID and ClientSecret
 // immediately gets a Token from msgraph (hence initialize this GraphAPI instance)
-// and returns an error if any of the data provided is incorrect or the token can not be acquired
+// and returns an error if any of the data provided is incorrect or the token cannot be acquired
 func (g *GraphClient) UnmarshalJSON(data []byte) error {
 	tmp := struct {
 		TenantID      string
@@ -233,7 +233,7 @@ func (g *GraphClient) UnmarshalJSON(data []byte) error {
 	// get a token and return the error (if any)
 	err = g.refreshToken()
 	if err != nil {
-		return fmt.Errorf("Can't get Token: %v", err)
+		return fmt.Errorf("can't get Token: %v", err)
 	}
 	return nil
 }

@@ -9,11 +9,11 @@ func GetTestGroup(t *testing.T) Group {
 	TestEnvironmentVariablesPresent(t) // checks the env-variables and failsNow if any is missing
 	groups, err := graphClient.ListGroups()
 	if err != nil {
-		t.Fatalf("Can not GraphClient.ListGroups(): %v", err)
+		t.Fatalf("Cannot GraphClient.ListGroups(): %v", err)
 	}
 	groupTest, err := groups.GetByDisplayName(msGraphExistingGroupDisplayName)
 	if err != nil {
-		t.Fatalf("Can not groups.GetByDisplayName(%v): %v", msGraphExistingGroupDisplayName, err)
+		t.Fatalf("Cannot groups.GetByDisplayName(%v): %v", msGraphExistingGroupDisplayName, err)
 	}
 	return groupTest
 }

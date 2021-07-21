@@ -68,7 +68,7 @@ func (c *CalendarEvents) UnmarshalJSON(data []byte) error {
 
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
-		return fmt.Errorf("Can not UnmarshalJSON: %v | Data: %v", err, string(data))
+		return fmt.Errorf("cannot UnmarshalJSON: %v | Data: %v", err, string(data))
 	}
 
 	*c = tmp.CalendarEvents // re-assign the

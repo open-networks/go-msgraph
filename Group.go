@@ -85,7 +85,7 @@ func (g *Group) UnmarshalJSON(data []byte) error {
 	g.DisplayName = tmp.DisplayName
 	g.CreatedDateTime, err = time.Parse(time.RFC3339, tmp.CreatedDateTime)
 	if err != nil && tmp.CreatedDateTime != "" {
-		return fmt.Errorf("Can not parse CreatedDateTime %v with RFC3339: %v", tmp.CreatedDateTime, err)
+		return fmt.Errorf("cannot parse CreatedDateTime %v with RFC3339: %v", tmp.CreatedDateTime, err)
 	}
 	g.GroupTypes = tmp.GroupTypes
 	g.Mail = tmp.Mail
@@ -93,7 +93,7 @@ func (g *Group) UnmarshalJSON(data []byte) error {
 	g.MailNickname = tmp.MailNickname
 	g.OnPremisesLastSyncDateTime, err = time.Parse(time.RFC3339, tmp.OnPremisesLastSyncDateTime)
 	if err != nil && tmp.OnPremisesLastSyncDateTime != "" {
-		return fmt.Errorf("Can not parse OnPremisesLastSyncDateTime %v with RFC3339: %v", tmp.OnPremisesLastSyncDateTime, err)
+		return fmt.Errorf("cannot parse OnPremisesLastSyncDateTime %v with RFC3339: %v", tmp.OnPremisesLastSyncDateTime, err)
 	}
 	g.OnPremisesSecurityIdentifier = tmp.OnPremisesSecurityIdentifier
 	g.OnPremisesSyncEnabled = tmp.OnPremisesSyncEnabled

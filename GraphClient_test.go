@@ -210,11 +210,11 @@ func TestGraphClient_GetGroup(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			allGroups, err := tt.g.ListGroups()
 			if err != nil { // check if groups can be listed
-				t.Fatalf("GraphClient.ListGroups(): can not list groups: %v", err)
+				t.Fatalf("GraphClient.ListGroups(): cannot list groups: %v", err)
 			}
 			targetGroup, err := allGroups.GetByDisplayName(tt.want.DisplayName)
 			if err != nil { // check if the group to be tested is in the list
-				t.Fatalf("Groups.GetByDisplayName(): can not find group %v in %v, err: %v", tt.want.DisplayName, allGroups, err)
+				t.Fatalf("Groups.GetByDisplayName(): cannot find group %v in %v, err: %v", tt.want.DisplayName, allGroups, err)
 			}
 			got, err := tt.g.GetGroup(targetGroup.ID) // actually execute the test we want to test
 			if (err != nil) != tt.wantErr {
