@@ -26,4 +26,5 @@ jobs:
         MSGraphClientSecret: ${{ secrets.MSGraphClientSecret }}
         MSGraphExistingGroupDisplayName: ${{ secrets.MSGraphExistingGroupDisplayName }}
         MSGraphExistingUserPrincipalInGroup: ${{ secrets.MSGraphExistingUserPrincipalInGroup }}
+        MSGraphExistingCalendarsOfUser: ${{ secrets.MSGraphExistingCalendarsOfUser }}
       run: go test -v ./...
