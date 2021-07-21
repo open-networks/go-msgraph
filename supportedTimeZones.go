@@ -165,6 +165,7 @@ var WinIANA = map[string]string{
 	"(UTC+03:00) Moscow, St. Petersburg":                            "Europe/Moscow",
 	"(UTC+03:00) Moscow, St. Petersburg, Volgograd":                 "Europe/Moscow",
 	"(UTC+03:00) Nairobi":                                           "Africa/Nairobi",
+	"(UTC+03:00) Volgograd":                                         "Europe/Volgograd",
 	"(UTC+03:30) Tehran":                                            "Asia/Tehran",
 	"(UTC+04:00) Abu Dhabi, Muscat":                                 "Asia/Dubai",
 	"(UTC+04:00) Astrakhan, Ulyanovsk":                              "Europe/Samara",
