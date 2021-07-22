@@ -18,7 +18,7 @@ jobs:
       with:
         go-version: 1.16
     - name: Build
-      run: go build -v ./...
+      run: go build
 
     - name: Test
       env:
@@ -28,4 +28,6 @@ jobs:
         MSGraphExistingGroupDisplayName: ${{ secrets.MSGraphExistingGroupDisplayName }}
         MSGraphExistingUserPrincipalInGroup: ${{ secrets.MSGraphExistingUserPrincipalInGroup }}
         MSGraphExistingCalendarsOfUser: ${{ secrets.MSGraphExistingCalendarsOfUser }}
-      run: go test -v ./...
+      run: go test -coverprofile=coverage.txt -covermode=atomic
+    - name: Upload coverage to Codecov
+      run: bash <(curl -s https://codecov.io/bash)
