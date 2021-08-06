@@ -8,7 +8,6 @@ import (
 // GetTestUser returns a valid User instance for testing. Will issue a t.Fatalf if the
 // user cannot be loaded
 func GetTestUser(t *testing.T) User {
-	TestEnvironmentVariablesPresent(t)
 	userToTest, errUserToTest := graphClient.GetUser(msGraphExistingUserPrincipalInGroup)
 	if errUserToTest != nil {
 		t.Fatalf("Cannot find user %v for Testing", msGraphExistingUserPrincipalInGroup)
@@ -18,6 +17,9 @@ func GetTestUser(t *testing.T) User {
 
 func TestUser_getTimeZoneChoices(t *testing.T) {
 	userToTest := GetTestUser(t)
+	if skipCalendarTests {
+		t.Skip("Skipping due to missing 'MSGraphExistingCalendarsOfUser' value")
+	}
 
 	tests := []struct {
 		name    string
@@ -34,7 +36,7 @@ func TestUser_getTimeZoneChoices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := tt.u.getTimeZoneChoices()
+			_, err := tt.u.getTimeZoneChoices(compileGetQueryOptions([]GetQueryOption{}))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("User.getTimeZoneChoices() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -46,6 +48,9 @@ func TestUser_getTimeZoneChoices(t *testing.T) {
 }
 
 func TestUser_ListCalendars(t *testing.T) {
+	if skipCalendarTests {
+		t.Skip("Skipping due to missing 'MSGraphExistingCalendarsOfUser' value")
+	}
 	userToTest := GetTestUser(t)
 
 	var wantedCalendars []Calendar
@@ -87,6 +92,9 @@ func TestUser_ListCalendars(t *testing.T) {
 }
 
 func TestUser_ListCalendarView(t *testing.T) {
+	if skipCalendarTests {
+		t.Skip("Skipping due to missing 'MSGraphExistingCalendarsOfUser' value")
+	}
 	userToTest := GetTestUser(t)
 
 	type args struct {

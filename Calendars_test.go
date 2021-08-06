@@ -8,7 +8,11 @@ import (
 // GetTestListCalendars tries to get a valid User from the User-test cases
 // and then uses ListCalendars() for this instance.
 func GetTestListCalendars(t *testing.T) Calendars {
+	t.Helper()
 	testUser := GetTestUser(t)
+	if skipCalendarTests {
+		t.Skip("Skipping due to missing 'MSGraphExistingCalendarsOfUser' value")
+	}
 	testCalendars, err := testUser.ListCalendars()
 	if err != nil {
 		t.Fatalf("Cannot User.ListCalendars() for user %v: %v", testUser, err)
@@ -21,7 +25,9 @@ func GetTestListCalendars(t *testing.T) Calendars {
 
 func TestCalendars_GetByName(t *testing.T) {
 	testCalendars := GetTestListCalendars(t)
-
+	if skipCalendarTests {
+		t.Skip("Skipping due to missing 'MSGraphExistingCalendarsOfUser' value")
+	}
 	type args struct {
 		name string
 	}
@@ -55,6 +61,9 @@ func TestCalendars_GetByName(t *testing.T) {
 }
 
 func TestCalendars_String(t *testing.T) {
+	if skipCalendarTests {
+		t.Skip("Skipping due to missing 'MSGraphExistingCalendarsOfUser' value")
+	}
 	testCalendars := GetTestListCalendars(t)
 
 	// write custom string func
