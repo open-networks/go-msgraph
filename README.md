@@ -1,4 +1,5 @@
 # Golang Microsoft Graph API implementation
+
 [![Latest Release](https://img.shields.io/github/v/release/open-networks/go-msgraph)](https://github.com/open-networks/go-msgraph/releases)
 [![Github Actions](https://github.com/open-networks/go-msgraph/actions/workflows/go.yml/badge.svg)](https://github.com/open-networks/go-msgraph/actions)
 [![godoc](https://godoc.org/github.com/open-networks/go-msgraph?status.svg)](https://godoc.org/github.com/open-networks/go-msgraph)
@@ -6,26 +7,33 @@
 [![codebeat badge](https://codebeat.co/badges/9d93c0c6-a981-42d3-97a7-bb48c296257f)](https://codebeat.co/projects/github-com-open-networks-go-msgraph-master)
 [![codecov](https://codecov.io/gh/open-networks/go-msgraph/branch/master/graph/badge.svg)](https://codecov.io/gh/open-networks/go-msgraph)
 
-`go-msgraph` is a go lang implementation of the Microsoft Graph API. See https://developer.microsoft.com/en-us/graph/docs/concepts/overview
+`go-msgraph` is a go lang implementation of the Microsoft Graph API. See [https://developer.microsoft.com/en-us/graph/docs/concepts/overview](https://developer.microsoft.com/en-us/graph/docs/concepts/overview)
 
 ## General
+
 This implementation has been written to get various user, group and calendar details out of a Microsoft Azure Active Directory. Currently only READ-access is implemented, but you are welcome to add WRITE-support to it & backmerge it.
 
 ## Features
+
 working & tested:
+
 - list users, groups, calendars, calendarevents
 - automatically grab & refresh token for API-access
 - json-load the GraphClient struct & initialize it
 - set timezone for full-day CalendarEvent
 
 in progress:
+
 - implement paging to load huge data-sets, currently limitted to one page, 999 entries
 
 planned:
-- add further support for mail, personal contacts (outlook), devices and apps, files etc. See https://developer.microsoft.com/en-us/graph/docs/concepts/v1-overview
+
+- add further support for mail, personal contacts (outlook), devices and apps, files etc. See [https://developer.microsoft.com/en-us/graph/docs/concepts/v1-overview](https://developer.microsoft.com/en-us/graph/docs/concepts/v1-overview)
 
 ## Example
-To get your credentials visit: https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal
+
+To get your credentials visit: [https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal)
+
 ````go
 // initialize GraphClient manually
 graphClient, err := msgraph.NewGraphClient("<TenantID>", "<ApplicationID>", "<ClientSecret>")
@@ -34,7 +42,7 @@ if err != nil {
 }
 
 // initialize the GraphClient via JSON-Load. Please do proper error-handling (!)
-// Specify JSON-Fields TenantID, ApplicationID and ClientSecret 
+// Specify JSON-Fields TenantID, ApplicationID and ClientSecret
 fileContents, err := ioutil.ReadFile("./msgraph-credentials.json")
 var graphClient msgraph.GraphClient
 err = json.Unmarshal(fileContents, &graphClient)
@@ -42,7 +50,7 @@ err = json.Unmarshal(fileContents, &graphClient)
 // List all users
 users, err := graphClient.ListUsers()
 // Gets all the detailled information about a user identified by it's ID or userPrincipalName
-user, err := graphClient.GetUser("humpty@contoso.com") 
+user, err := graphClient.GetUser("humpty@contoso.com")
 // List all groups
 groups, err := graphClient.ListGroups()
 // List all members of a group.
@@ -64,15 +72,19 @@ events, err := graphClient.ListCalendarView("alice@contoso.com", startTime, endT
 
 ### Using *go get*
 
-    $ go get github.com/open-networks/go-msgraph
+```shell
+go get github.com/open-networks/go-msgraph
+```
 
 You can use `go get -u` to update the package.
 
 ## Documentation
 
-For docs, see http://godoc.org/github.com/open-networks/go-msgraph or run:
+For docs, see [http://godoc.org/github.com/open-networks/go-msgraph](http://godoc.org/github.com/open-networks/go-msgraph) or run:
 
-    $ godoc github.com/open-networks/go-msgraph
+```shell
+godoc github.com/open-networks/go-msgraph
+```
 
 ## License
 
