@@ -74,5 +74,6 @@ For docs, see http://godoc.org/github.com/open-networks/go-msgraph or run:
 
     $ godoc github.com/open-networks/go-msgraph
 
+## License
 
-
+[MIT](LICENSE)
