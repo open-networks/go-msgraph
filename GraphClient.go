@@ -5,6 +5,7 @@ package msgraph
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -15,9 +16,15 @@ import (
 	"time"
 )
 
+const (
+	odataSearchParamKey = "$search"
+	odataFilterParamKey = "$filter"
+	odataSelectParamKey = "$select"
+)
+
 // GraphClient represents a msgraph API connection instance.
 //
-// An instance can also be json-unmarshalled an will immediately be initialized, hence a Token will be
+// An instance can also be json-unmarshalled and will immediately be initialized, hence a Token will be
 // grabbed. If grabbing a token fails the JSON-Unmarshal returns an error.
 type GraphClient struct {
 	apiCall sync.Mutex // lock it when performing an API-call to synchronize it
@@ -86,7 +93,7 @@ func (g *GraphClient) refreshToken() error {
 }
 
 // makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
-func (g *GraphClient) makeGETAPICall(apicall string, getParams url.Values, v interface{}) error {
+func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams, v interface{}) error {
 	g.apiCall.Lock()
 	defer g.apiCall.Unlock() // unlock when the func returns
 	// Check token
@@ -103,9 +110,9 @@ func (g *GraphClient) makeGETAPICall(apicall string, getParams url.Values, v int
 	}
 
 	// Add Version to API-Call, the leading slash is always added by the calling func
-	reqURL.Path = "/" + APIVersion + apicall
+	reqURL.Path = "/" + APIVersion + apiCall
 
-	req, err := http.NewRequest("GET", reqURL.String(), nil)
+	req, err := http.NewRequestWithContext(reqParams.Context(), http.MethodGet, reqURL.String(), nil)
 	if err != nil {
 		return fmt.Errorf("HTTP request error: %v", err)
 	}
@@ -113,9 +120,13 @@ func (g *GraphClient) makeGETAPICall(apicall string, getParams url.Values, v int
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", g.token.GetAccessToken())
 
-	if getParams == nil { // initialize getParams if it's nil
-		getParams = url.Values{}
+	for key, vals := range reqParams.Headers() {
+		for idx := range vals {
+			req.Header.Add(key, vals[idx])
+		}
 	}
+
+	var getParams = reqParams.Values()
 
 	// TODO: Improve performance with using $skip & paging instead of retrieving all results with $top
 	// TODO: MaxPageSize is currently 999, if there are any time more than 999 entries this will make the program unpredictable... hence start to use paging (!)
@@ -154,50 +165,180 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 }
 
 // ListUsers returns a list of all users
+// Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list
-func (g *GraphClient) ListUsers() (Users, error) {
+func (g *GraphClient) ListUsers(opts ...ListQueryOption) (Users, error) {
 	resource := "/users"
 	var marsh struct {
 		Users Users `json:"value"`
 	}
-	err := g.makeGETAPICall(resource, nil, &marsh)
+	err := g.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
 	marsh.Users.setGraphClient(g)
 	return marsh.Users, err
 }
 
+type getRequestParams interface {
+	Context() context.Context
+	Values() url.Values
+	Headers() http.Header
+}
+
+type GetQueryOption func(opts *getQueryOptions)
+
+type ListQueryOption func(opts *listQueryOptions)
+
+var (
+	// GetWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
+	GetWithContext = func(ctx context.Context) GetQueryOption {
+		return func(opts *getQueryOptions) {
+			opts.ctx = ctx
+		}
+	}
+
+	// GetWithSelect - $select - Filters properties (columns) - https://docs.microsoft.com/en-us/graph/query-parameters#select-parameter
+	GetWithSelect = func(selectParam string) GetQueryOption {
+		return func(opts *getQueryOptions) {
+			opts.queryValues.Add(odataSelectParamKey, selectParam)
+		}
+	}
+
+	// ListWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
+	ListWithContext = func(ctx context.Context) ListQueryOption {
+		return func(opts *listQueryOptions) {
+			opts.ctx = ctx
+		}
+	}
+
+	// ListWithSelect - $select - Filters properties (columns) - https://docs.microsoft.com/en-us/graph/query-parameters#select-parameter
+	ListWithSelect = func(selectParam string) ListQueryOption {
+		return func(opts *listQueryOptions) {
+			opts.queryValues.Add(odataSelectParamKey, selectParam)
+		}
+	}
+
+	// ListWithFilter - $filter - Filters results (rows) - https://docs.microsoft.com/en-us/graph/query-parameters#filter-parameter
+	ListWithFilter = func(filterParam string) ListQueryOption {
+		return func(opts *listQueryOptions) {
+			opts.queryValues.Add(odataFilterParamKey, filterParam)
+		}
+	}
+
+	// ListWithSearch - $search - Returns results based on search criteria - https://docs.microsoft.com/en-us/graph/query-parameters#search-parameter
+	ListWithSearch = func(searchParam string) ListQueryOption {
+		return func(opts *listQueryOptions) {
+			opts.queryHeaders.Add("ConsistencyLevel", "eventual")
+			opts.queryValues.Add(odataSearchParamKey, searchParam)
+		}
+	}
+)
+
+// getQueryOptions allow to optionally pass OData query options
+// see https://docs.microsoft.com/en-us/graph/query-parameters
+type getQueryOptions struct {
+	ctx         context.Context
+	queryValues url.Values
+}
+
+func (g *getQueryOptions) Context() context.Context {
+	if g.ctx == nil {
+		return context.Background()
+	}
+	return g.ctx
+}
+
+func (g getQueryOptions) Values() url.Values {
+	return g.queryValues
+}
+
+func (g getQueryOptions) Headers() http.Header {
+	return http.Header{}
+}
+
+func compileGetQueryOptions(options []GetQueryOption) *getQueryOptions {
+	var opts = &getQueryOptions{
+		queryValues: url.Values{},
+	}
+	for idx := range options {
+		options[idx](opts)
+	}
+
+	return opts
+}
+
+// listQueryOptions allow to optionally pass OData query options
+// see https://docs.microsoft.com/en-us/graph/query-parameters
+type listQueryOptions struct {
+	getQueryOptions
+	queryHeaders http.Header
+}
+
+func (g *listQueryOptions) Context() context.Context {
+	if g.ctx == nil {
+		return context.Background()
+	}
+	return g.ctx
+}
+
+func (g listQueryOptions) Values() url.Values {
+	return g.queryValues
+}
+
+func (g listQueryOptions) Headers() http.Header {
+	return g.queryHeaders
+}
+
+func compileListQueryOptions(options []ListQueryOption) *listQueryOptions {
+	var opts = &listQueryOptions{
+		getQueryOptions: getQueryOptions{
+			queryValues: url.Values{},
+		},
+		queryHeaders: http.Header{},
+	}
+	for idx := range options {
+		options[idx](opts)
+	}
+
+	return opts
+}
+
 // ListGroups returns a list of all groups
+// Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list
-func (g *GraphClient) ListGroups() (Groups, error) {
+func (g *GraphClient) ListGroups(opts ...ListQueryOption) (Groups, error) {
 	resource := "/groups"
+
+	var reqParams = compileListQueryOptions(opts)
 
 	var marsh struct {
 		Groups Groups `json:"value"`
 	}
-	err := g.makeGETAPICall(resource, nil, &marsh)
+	err := g.makeGETAPICall(resource, reqParams, &marsh)
 	marsh.Groups.setGraphClient(g)
 	return marsh.Groups, err
 }
 
 // GetUser returns the user object associated to the given user identified by either
 // the given ID or userPrincipalName
+// Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_get
-func (g *GraphClient) GetUser(identifier string) (User, error) {
+func (g *GraphClient) GetUser(identifier string, opts ...GetQueryOption) (User, error) {
 	resource := fmt.Sprintf("/users/%v", identifier)
 	user := User{graphClient: g}
-	err := g.makeGETAPICall(resource, nil, &user)
+	err := g.makeGETAPICall(resource, compileGetQueryOptions(opts), &user)
 	return user, err
 }
 
 // GetGroup returns the group object identified by the given groupID.
+// Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_get
-func (g *GraphClient) GetGroup(groupID string) (Group, error) {
+func (g *GraphClient) GetGroup(groupID string, opts ...GetQueryOption) (Group, error) {
 	resource := fmt.Sprintf("/groups/%v", groupID)
 	group := Group{graphClient: g}
-	err := g.makeGETAPICall(resource, nil, &group)
+	err := g.makeGETAPICall(resource, compileGetQueryOptions(opts), &group)
 	return group, err
 }
 

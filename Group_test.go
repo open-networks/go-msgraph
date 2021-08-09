@@ -6,7 +6,6 @@ import (
 )
 
 func GetTestGroup(t *testing.T) Group {
-	TestEnvironmentVariablesPresent(t) // checks the env-variables and failsNow if any is missing
 	groups, err := graphClient.ListGroups()
 	if err != nil {
 		t.Fatalf("Cannot GraphClient.ListGroups(): %v", err)

@@ -2,7 +2,6 @@ package msgraph
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -37,9 +36,10 @@ func (u *User) setGraphClient(gC *GraphClient) {
 }
 
 // ListCalendars returns all calendars associated to that user.
+// Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list_calendars
-func (u User) ListCalendars() (Calendars, error) {
+func (u User) ListCalendars(opts ...ListQueryOption) (Calendars, error) {
 	if u.graphClient == nil {
 		return Calendars{}, ErrNotGraphClientSourced
 	}
@@ -48,7 +48,7 @@ func (u User) ListCalendars() (Calendars, error) {
 	var marsh struct {
 		Calendars Calendars `json:"value"`
 	}
-	err := u.graphClient.makeGETAPICall(resource, nil, &marsh)
+	err := u.graphClient.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
 	marsh.Calendars.setGraphClient(u.graphClient)
 	return marsh.Calendars, err
 }
@@ -57,16 +57,18 @@ func (u User) ListCalendars() (Calendars, error) {
 // start- and endDateTime. The calendar used is the default calendar of the user.
 // Returns an error if the user it not GraphClient sourced or if there is any error
 // during the API-call.
+// Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
 // See https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list_calendarview
-func (u User) ListCalendarView(startDateTime, endDateTime time.Time) (CalendarEvents, error) {
+func (u User) ListCalendarView(startDateTime, endDateTime time.Time, opts ...ListQueryOption) (CalendarEvents, error) {
 	if u.graphClient == nil {
 		return CalendarEvents{}, ErrNotGraphClientSourced
 	}
 
+	var reqOpt = compileListQueryOptions(opts)
 	if len(globalSupportedTimeZones.Value) == 0 {
 		var err error
-		globalSupportedTimeZones, err = u.getTimeZoneChoices()
+		globalSupportedTimeZones, err = u.getTimeZoneChoices(reqOpt)
 		if err != nil {
 			return CalendarEvents{}, err
 		}
@@ -75,12 +77,11 @@ func (u User) ListCalendarView(startDateTime, endDateTime time.Time) (CalendarEv
 	resource := fmt.Sprintf("/users/%v/calendar/calendarview", u.ID)
 
 	// set GET-Params for start and end time
-	getParams := url.Values{}
-	getParams.Add("startdatetime", startDateTime.Format("2006-01-02T00:00:00"))
-	getParams.Add("enddatetime", endDateTime.Format("2006-01-02T00:00:00"))
+	reqOpt.queryValues.Add("startdatetime", startDateTime.Format("2006-01-02T00:00:00"))
+	reqOpt.queryValues.Add("enddatetime", endDateTime.Format("2006-01-02T00:00:00"))
 
 	var calendarEvents CalendarEvents
-	return calendarEvents, u.graphClient.makeGETAPICall(resource, getParams, &calendarEvents)
+	return calendarEvents, u.graphClient.makeGETAPICall(resource, reqOpt, &calendarEvents)
 }
 
 // getTimeZoneChoices grabs all supported time zones from microsoft for this user.
@@ -88,9 +89,9 @@ func (u User) ListCalendarView(startDateTime, endDateTime time.Time) (CalendarEv
 // msgraph package.
 //
 // See https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/outlookuser_supportedtimezones
-func (u User) getTimeZoneChoices() (supportedTimeZones, error) {
+func (u User) getTimeZoneChoices(opts getRequestParams) (supportedTimeZones, error) {
 	var ret supportedTimeZones
-	err := u.graphClient.makeGETAPICall(fmt.Sprintf("/users/%s/outlook/supportedTimeZones", u.ID), nil, &ret)
+	err := u.graphClient.makeGETAPICall(fmt.Sprintf("/users/%s/outlook/supportedTimeZones", u.ID), opts, &ret)
 	return ret, err
 }
 

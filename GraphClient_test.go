@@ -1,50 +1,72 @@
 package msgraph
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
+	"reflect"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 // get graph client config from environment
 var (
 	// Microsoft Graph tenant ID
-	msGraphTenantID = os.Getenv("MSGraphTenantID")
+	msGraphTenantID string
 	// Microsoft Graph Application ID
-	msGraphApplicationID = os.Getenv("MSGraphApplicationID")
+	msGraphApplicationID string
 	// Microsoft Graph Client Secret
-	msGraphClientSecret = os.Getenv("MSGraphClientSecret")
+	msGraphClientSecret string
 	// a valid groupdisplayname from msgraph, e.g. technicians@contoso.com
-	msGraphExistingGroupDisplayName = os.Getenv("MSGraphExistingGroupDisplayName")
+	msGraphExistingGroupDisplayName string
 	// a valid userprincipalname in the above group, e.g. felix@contoso.com
-	msGraphExistingUserPrincipalInGroup = os.Getenv("MSGraphExistingUserPrincipalInGroup")
-	// valid calendar names that belong to the above user, sepearated by a colon (","). e.g.: "Kalender,Feiertage in Österreich,Geburtstage"
-	msGraphExistingCalendarsOfUser = strings.Split(os.Getenv("MSGraphExistingCalendarsOfUser"), ",")
+	msGraphExistingUserPrincipalInGroup string
+	// valid calendar names that belong to the above user, seperated by a colon (","). e.g.: "Kalender,Feiertage in Österreich,Geburtstage"
+	msGraphExistingCalendarsOfUser []string
+	// the number of expected results when searching for the msGraphExistingGroupDisplayName with $search or $filter
+	msGraphExistingGroupDisplayNameNumRes uint64
+	// the graphclient used to perform all tests
+	graphClient *GraphClient
+	// marker if the calendar tests should be skipped - set if msGraphExistingCalendarsOfUser is empty
+	skipCalendarTests bool
 )
 
-// the graphclient used to perform all tests
-var graphClient, _ = NewGraphClient(msGraphTenantID, msGraphApplicationID, msGraphClientSecret)
+func getEnvOrPanic(key string) string {
+	var val = os.Getenv(key)
+	if val == "" {
+		panic(fmt.Sprintf("Expected %s to be set but is empty", key))
+	}
+	return val
+}
 
-func TestEnvironmentVariablesPresent(t *testing.T) {
-	if msGraphTenantID == "" {
-		t.Fatal("Environment Variable for Tenant ID named <MSGraphTenantID> is mising!")
+func TestMain(m *testing.M) {
+	msGraphTenantID = getEnvOrPanic("MSGraphTenantID")
+	msGraphApplicationID = getEnvOrPanic("MSGraphApplicationID")
+	msGraphClientSecret = getEnvOrPanic("MSGraphClientSecret")
+	msGraphExistingGroupDisplayName = getEnvOrPanic("MSGraphExistingGroupDisplayName")
+	msGraphExistingUserPrincipalInGroup = getEnvOrPanic("MSGraphExistingUserPrincipalInGroup")
+
+	if msGraphExistingCalendarsOfUser = strings.Split(os.Getenv("MSGraphExistingCalendarsOfUser"), ","); msGraphExistingCalendarsOfUser[0] == "" {
+		fmt.Println("Skipping calendar tests due to missing 'MSGraphExistingCalendarsOfUser' value")
+		skipCalendarTests = true
 	}
-	if msGraphApplicationID == "" {
-		t.Fatal("Environment Variable for Application ID named <MSGraphApplicationID> is mising!")
+
+	var err error
+	msGraphExistingGroupDisplayNameNumRes, err = strconv.ParseUint(os.Getenv("MSGraphExistingGroupDisplayNameNumRes"), 10, 64)
+	if err != nil {
+		panic(err)
 	}
-	if msGraphClientSecret == "" {
-		t.Fatal("Environment Variable for Client Secret named <MSGraphClientSecret> is mising!")
+
+	graphClient, err = NewGraphClient(msGraphTenantID, msGraphApplicationID, msGraphClientSecret)
+	if err != nil {
+		panic(err)
 	}
-	if msGraphExistingGroupDisplayName == "" {
-		t.Fatal("Environment Variable for an existing group's displayName named <MSGraphExistingGroupDisplayName> is mising!")
-	}
-	if msGraphExistingUserPrincipalInGroup == "" {
-		t.Fatal("Environment Variable for an existing user in the group named <MSGraphExistingUserPrincipalInGroup> is missing!")
-	}
-	if msGraphExistingCalendarsOfUser[0] == "" {
-		t.Fatal("Environment Variable for existing calendars of the given user named <MSGraphExistingCalendarsOfUser> is missing!")
-	}
+
+	os.Exit(m.Run())
 }
 
 func TestNewGraphClient(t *testing.T) {
@@ -68,7 +90,7 @@ func TestNewGraphClient(t *testing.T) {
 			wantErr: true,
 		}, {
 			name:    "GraphClient fail - wrong application ID",
-			args:    args{tenantID: msGraphTenantID, applicationID: "wrong applicatio id", clientSecret: msGraphClientSecret},
+			args:    args{tenantID: msGraphTenantID, applicationID: "wrong application id", clientSecret: msGraphClientSecret},
 			wantErr: true,
 		}, {
 			name:    "GraphClient fail - wrong client secret",
@@ -131,6 +153,7 @@ func TestGraphClient_ListGroups(t *testing.T) {
 	tests := []struct {
 		name    string
 		g       *GraphClient
+		opts    []ListQueryOption
 		want    Group
 		wantErr bool
 	}{
@@ -143,25 +166,245 @@ func TestGraphClient_ListGroups(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.g.ListGroups()
+			got, err := tt.g.ListGroups(tt.opts...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GraphClient.ListGroups() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			found := false
-			isGraphClientInitializd := true
+			isGraphClientInitialized := true
 			for _, checkObj := range got {
 				found = found || tt.want.DisplayName == checkObj.DisplayName
-				isGraphClientInitializd = isGraphClientInitializd && checkObj.graphClient != nil
+				isGraphClientInitialized = isGraphClientInitialized && checkObj.graphClient != nil
 			}
 			if !found {
 				t.Errorf("GraphClient.ListGroups() = %v, searching for one of %v", got, tt.want)
 			}
-			if !isGraphClientInitializd {
+			if !isGraphClientInitialized {
 				t.Errorf("GraphClient.ListGroups() graphClient is nil, but was initialized from GraphClient")
 			}
 		})
 	}
+}
+
+func TestGraphClient_ListGroupsWithSelect(t *testing.T) {
+	tests := []struct {
+		name              string
+		g                 *GraphClient
+		opts              []ListQueryOption
+		want              Group
+		wantErr           bool
+		wantZeroFields    []string
+		wantNonZeroFields []string
+	}{
+		{
+			name:    fmt.Sprintf("Test if Group %v is present and contains only specified fields", msGraphExistingGroupDisplayName),
+			g:       graphClient,
+			want:    Group{DisplayName: msGraphExistingGroupDisplayName},
+			wantErr: false,
+			opts: []ListQueryOption{
+				ListWithSelect("displayName,createdDateTime"),
+			},
+			wantZeroFields:    []string{"ID"},
+			wantNonZeroFields: []string{"DisplayName", "CreatedDateTime"},
+		},
+		{
+			name:    fmt.Sprintf("Test if Group %v is present and contains only specified fields with context", msGraphExistingGroupDisplayName),
+			g:       graphClient,
+			want:    Group{DisplayName: msGraphExistingGroupDisplayName},
+			wantErr: false,
+			opts: []ListQueryOption{
+				ListWithSelect("displayName,createdDateTime"),
+				ListWithContext(context.Background()),
+			},
+			wantZeroFields:    []string{"ID"},
+			wantNonZeroFields: []string{"DisplayName", "CreatedDateTime"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.g.ListGroups(tt.opts...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GraphClient.ListGroups() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			found := false
+			isGraphClientInitialized := true
+
+			for _, checkObj := range got {
+				found = found || tt.want.DisplayName == checkObj.DisplayName
+
+				assertZeroFields(t, checkObj, tt.wantZeroFields, tt.wantNonZeroFields)
+				isGraphClientInitialized = isGraphClientInitialized && checkObj.graphClient != nil
+			}
+			if !found {
+				t.Errorf("GraphClient.ListGroups() = %v, searching for one of %v", got, tt.want)
+			}
+
+			if !isGraphClientInitialized {
+				t.Errorf("GraphClient.ListGroups() graphClient is nil, but was initialized from GraphClient")
+			}
+		})
+	}
+}
+
+func TestGraphClient_ListGroupsWithSearchAndFilter(t *testing.T) {
+	tests := []struct {
+		name    string
+		g       *GraphClient
+		opts    []ListQueryOption
+		want    Group
+		wantErr bool
+	}{
+		{
+			name:    fmt.Sprintf("Test if Group %v is present when using searchQuery", msGraphExistingGroupDisplayName),
+			g:       graphClient,
+			want:    Group{DisplayName: msGraphExistingGroupDisplayName},
+			wantErr: false,
+			opts: []ListQueryOption{
+				ListWithSearch(fmt.Sprintf(`"displayName:%s"`, msGraphExistingGroupDisplayName)),
+				ListWithFilter(fmt.Sprintf("displayName eq '%s'", msGraphExistingGroupDisplayName)),
+			},
+		},
+		{
+			name:    fmt.Sprintf("Test if Group %v is present when using searchQuery with context", msGraphExistingGroupDisplayName),
+			g:       graphClient,
+			want:    Group{DisplayName: msGraphExistingGroupDisplayName},
+			wantErr: false,
+			opts: []ListQueryOption{
+				ListWithSearch(fmt.Sprintf(`"displayName:%s"`, msGraphExistingGroupDisplayName)),
+				ListWithFilter(fmt.Sprintf("displayName eq '%s'", msGraphExistingGroupDisplayName)),
+				ListWithContext(context.Background()),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.g.ListGroups(tt.opts...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GraphClient.ListGroups() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			found := false
+			isGraphClientInitialized := true
+
+			if len(got) != int(msGraphExistingGroupDisplayNameNumRes) {
+				t.Errorf("GraphClient.ListGroups(): Did not find expected number of results. Wanted: %d, got: %d", msGraphExistingGroupDisplayNameNumRes, len(got))
+			}
+
+			for _, checkObj := range got {
+				found = found || tt.want.DisplayName == checkObj.DisplayName
+				isGraphClientInitialized = isGraphClientInitialized && checkObj.graphClient != nil
+			}
+			if !found {
+				t.Errorf("GraphClient.ListGroups() = %v, searching for one of %v", got, tt.want)
+			}
+
+			if !isGraphClientInitialized {
+				t.Errorf("GraphClient.ListGroups() graphClient is nil, but was initialized from GraphClient")
+			}
+		})
+	}
+}
+
+func TestGraphClient_ListGroupsWithSelectAndFilter(t *testing.T) {
+	tests := []struct {
+		name              string
+		g                 *GraphClient
+		opts              []ListQueryOption
+		want              Group
+		wantErr           bool
+		wantZeroFields    []string
+		wantNonZeroFields []string
+	}{
+		{
+			name:    fmt.Sprintf("Test if Group %v is present when using searchQuery", msGraphExistingGroupDisplayName),
+			g:       graphClient,
+			want:    Group{DisplayName: msGraphExistingGroupDisplayName},
+			wantErr: false,
+			opts: []ListQueryOption{
+				ListWithSelect("displayName,createdDateTime"),
+				ListWithFilter(fmt.Sprintf("displayName eq '%s'", msGraphExistingGroupDisplayName)),
+			},
+			wantZeroFields:    []string{"ID"},
+			wantNonZeroFields: []string{"DisplayName", "CreatedDateTime"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.g.ListGroups(tt.opts...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GraphClient.ListGroups() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			found := false
+			isGraphClientInitialized := true
+
+			if len(got) != 1 {
+				t.Error("GraphClient.ListGroups(): Did not find expected number of results (one).")
+			}
+
+			for _, checkObj := range got {
+				found = found || tt.want.DisplayName == checkObj.DisplayName
+
+				assertZeroFields(t, checkObj, tt.wantZeroFields, tt.wantNonZeroFields)
+				isGraphClientInitialized = isGraphClientInitialized && checkObj.graphClient != nil
+			}
+			if !found {
+				t.Errorf("GraphClient.ListGroups() = %v, searching for one of %v", got, tt.want)
+			}
+
+			if !isGraphClientInitialized {
+				t.Errorf("GraphClient.ListGroups() graphClient is nil, but was initialized from GraphClient")
+			}
+		})
+	}
+}
+
+func assertZeroFields(tb testing.TB, v interface{}, zeroFieldNames []string, nonZeroFieldNames []string) {
+	tb.Helper()
+
+	var (
+		jsonBytes  []byte
+		err        error
+		mappedData = make(map[string]interface{})
+	)
+
+	if jsonBytes, err = json.Marshal(v); err != nil {
+		tb.Fatalf("json.Marshal() error = %v", err)
+	}
+
+	if err = json.Unmarshal(jsonBytes, &mappedData); err != nil {
+		tb.Fatalf("json.Marshal() error = %v", err)
+	}
+
+	for _, fieldName := range nonZeroFieldNames {
+		if isZeroValue(v, fieldName, mappedData) {
+			tb.Fatalf("Expected field %s to have non zero value", fieldName)
+		}
+	}
+
+	for _, fieldName := range zeroFieldNames {
+		if !isZeroValue(v, fieldName, mappedData) {
+			tb.Fatalf("Expected field %s to have zero value but got %v", fieldName, mappedData[fieldName])
+		}
+	}
+}
+
+func isZeroValue(v interface{}, prop string, m map[string]interface{}) bool {
+	// get value of 'v' if it's a reference
+	underlying := reflect.Indirect(reflect.ValueOf(v))
+	// if v is nil pointer return zero straight away
+	if underlying.IsZero() {
+		return true
+	}
+
+	// check if property has a IsZero() bool func e.g. for time.Time
+	if zeroable, hasIsZero := underlying.FieldByName(prop).Interface().(interface{ IsZero() bool }); hasIsZero {
+		return zeroable.IsZero()
+	}
+
+	return reflect.ValueOf(m[prop]).IsZero()
 }
 
 func TestGraphClient_GetUser(t *testing.T) {
@@ -207,12 +450,20 @@ func TestGraphClient_GetGroup(t *testing.T) {
 	tests := []struct {
 		name    string
 		g       *GraphClient
+		opts    []GetQueryOption
 		want    Group
 		wantErr bool
 	}{
 		{
-			name:    fmt.Sprintf("Test if Group %v is presnt and GetGroup-able", msGraphExistingGroupDisplayName),
+			name:    fmt.Sprintf("Test if Group %v is present and GetGroup-able", msGraphExistingGroupDisplayName),
 			g:       graphClient,
+			want:    Group{DisplayName: msGraphExistingGroupDisplayName},
+			wantErr: false,
+		},
+		{
+			name:    fmt.Sprintf("Test if Group %v is present and GetGroup-able with context", msGraphExistingGroupDisplayName),
+			g:       graphClient,
+			opts:    []GetQueryOption{GetWithContext(context.Background())},
 			want:    Group{DisplayName: msGraphExistingGroupDisplayName},
 			wantErr: false,
 		},
@@ -239,8 +490,214 @@ func TestGraphClient_GetGroup(t *testing.T) {
 	}
 }
 
+func TestGetQueryOptions_Context(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name         string
+		ctxSetup     func(tb testing.TB) context.Context
+		wantDeadline bool
+	}{
+		{
+			name:         "do not set a context explicitly expect background context",
+			wantDeadline: false,
+		},
+		{
+			name: "set background context",
+			ctxSetup: func(testing.TB) context.Context {
+				return context.Background()
+			},
+			wantDeadline: false,
+		},
+		{
+			name: "set context with timeout",
+			ctxSetup: func(tb testing.TB) context.Context {
+				t.Helper()
+				ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+				tb.Cleanup(cancel)
+				return ctx
+			},
+			wantDeadline: true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var opts []GetQueryOption
+			if tt.ctxSetup != nil {
+				ctx := tt.ctxSetup(t)
+				opts = append(opts, GetWithContext(ctx))
+			}
+
+			var compiledOpts = compileGetQueryOptions(opts)
+			var effectiveCtx = compiledOpts.Context()
+			if _, ok := effectiveCtx.Deadline(); ok != tt.wantDeadline {
+				t.Errorf("wantDeadline = %t but got %t", tt.wantDeadline, ok)
+			}
+		})
+	}
+}
+
+func TestListQueryOptions_Context(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name         string
+		ctxSetup     func(tb testing.TB) context.Context
+		wantDeadline bool
+	}{
+		{
+			name:         "do not set a context explicitly expect background context",
+			wantDeadline: false,
+		},
+		{
+			name: "set background context",
+			ctxSetup: func(testing.TB) context.Context {
+				return context.Background()
+			},
+			wantDeadline: false,
+		},
+		{
+			name: "set context with timeout",
+			ctxSetup: func(tb testing.TB) context.Context {
+				t.Helper()
+				ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+				tb.Cleanup(cancel)
+				return ctx
+			},
+			wantDeadline: true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var opts []ListQueryOption
+			if tt.ctxSetup != nil {
+				ctx := tt.ctxSetup(t)
+				opts = append(opts, ListWithContext(ctx))
+			}
+
+			var compiledOpts = compileListQueryOptions(opts)
+			var effectiveCtx = compiledOpts.Context()
+			if _, ok := effectiveCtx.Deadline(); ok != tt.wantDeadline {
+				t.Errorf("wantDeadline = %t but got %t", tt.wantDeadline, ok)
+			}
+		})
+	}
+}
+
+func TestGetQueryOptions_Values(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name       string
+		opts       []GetQueryOption
+		wantValues string
+	}{
+		{
+			name: "add $select",
+			opts: []GetQueryOption{GetWithSelect("displayName")},
+			wantValues: url.Values{
+				"$select": []string{"displayName"},
+			}.Encode(),
+		},
+		{
+			name: "Select multiple values",
+			opts: []GetQueryOption{GetWithSelect("displayName,createdDateTime")},
+			wantValues: url.Values{
+				"$select": []string{"displayName,createdDateTime"},
+			}.Encode(),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var compiledOpts = compileGetQueryOptions(tt.opts)
+			if encodedValues := compiledOpts.Values().Encode(); tt.wantValues != encodedValues {
+				unescapedWant, _ := url.PathUnescape(tt.wantValues)
+				unescapedGot, _ := url.PathUnescape(encodedValues)
+
+				t.Errorf("Expected values %s but got %s", unescapedWant, unescapedGot)
+			}
+		})
+	}
+}
+
+func TestListQueryOptions_ValuesAndHeaders(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name        string
+		opts        []ListQueryOption
+		wantValues  string
+		wantHeaders map[string]string
+	}{
+		{
+			name: "add $select",
+			opts: []ListQueryOption{ListWithSelect("displayName")},
+			wantValues: url.Values{
+				"$select": []string{"displayName"},
+			}.Encode(),
+		},
+		{
+			name: "Select multiple values",
+			opts: []ListQueryOption{ListWithSelect("displayName,createdDateTime")},
+			wantValues: url.Values{
+				"$select": []string{"displayName,createdDateTime"},
+			}.Encode(),
+		},
+		{
+			name: "Add $filter",
+			opts: []ListQueryOption{ListWithFilter("displayName eq SomeGroupName")},
+			wantValues: url.Values{
+				"$filter": []string{"displayName eq SomeGroupName"},
+			}.Encode(),
+		},
+		{
+			name: "Add $search",
+			opts: []ListQueryOption{ListWithSearch("displayName:hello")},
+			wantValues: url.Values{
+				"$search": []string{"displayName:hello"},
+			}.Encode(),
+			wantHeaders: map[string]string{
+				"ConsistencyLevel": "eventual",
+			},
+		},
+		{
+			name: "Add $search and $filter",
+			opts: []ListQueryOption{
+				ListWithSearch("displayName:hello"),
+				ListWithFilter("displayName eq 'hello world'"),
+			},
+			wantValues: url.Values{
+				"$search": []string{"displayName:hello"},
+				"$filter": []string{"displayName eq 'hello world'"},
+			}.Encode(),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var compiledOpts = compileListQueryOptions(tt.opts)
+			if encodedValues := compiledOpts.Values().Encode(); tt.wantValues != encodedValues {
+				unescapedWant, _ := url.PathUnescape(tt.wantValues)
+				unescapedGot, _ := url.PathUnescape(encodedValues)
+				t.Errorf("Expected values %s but got %s", unescapedWant, unescapedGot)
+				return
+			}
+			if tt.wantHeaders != nil {
+				var actualHeaders = compiledOpts.Headers()
+				for key, wantValue := range tt.wantHeaders {
+					if got := actualHeaders.Get(key); got != wantValue {
+						t.Errorf("Expected %s for header %s but got %s", wantValue, key, got)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestGraphClient_UnmarshalJSON(t *testing.T) {
-	TestEnvironmentVariablesPresent(t) // check prerequisites
 
 	type args struct {
 		data []byte

@@ -187,12 +187,13 @@ type VulnerabilityState struct {
 }
 
 // ListAlerts returns a slice of Alert objects from MS Graph's security API. Each Alert represents a security event reported by some component.
-func (g *GraphClient) ListAlerts() ([]Alert, error) {
+// Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
+func (g *GraphClient) ListAlerts(opts ...ListQueryOption) ([]Alert, error) {
 	resource := "/security/alerts"
 	var marsh struct {
 		Alerts []Alert `json:"value"`
 	}
-	err := g.makeGETAPICall(resource, nil, &marsh)
+	err := g.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
 	return marsh.Alerts, err
 }
 
@@ -227,13 +228,14 @@ type ControlScore struct {
 }
 
 // ListSecureScores returns a slice of SecureScore objects. Each SecureScore represents
+// Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 // a tenant's security score for a particular day.
-func (g *GraphClient) ListSecureScores() ([]SecureScore, error) {
+func (g *GraphClient) ListSecureScores(opts ...ListQueryOption) ([]SecureScore, error) {
 	resource := "/security/secureScores"
 	var marsh struct {
 		Scores []SecureScore `json:"value"`
 	}
-	err := g.makeGETAPICall(resource, nil, &marsh)
+	err := g.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
 	return marsh.Scores, err
 }
 
@@ -287,11 +289,12 @@ type SecureScoreControlStateUpdate struct {
 // ListSecureScoreControlProfiles returns a slice of SecureScoreControlProfile objects.
 // Each object represents a secure score control profile, which is used when calculating
 // a tenant's secure score.
-func (g *GraphClient) ListSecureScoreControlProfiles() ([]SecureScoreControlProfile, error) {
+// Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
+func (g *GraphClient) ListSecureScoreControlProfiles(opts ...ListQueryOption) ([]SecureScoreControlProfile, error) {
 	resource := "/security/secureScoreControlProfiles"
 	var marsh struct {
 		Profiles []SecureScoreControlProfile `json:"value"`
 	}
-	err := g.makeGETAPICall(resource, nil, &marsh)
+	err := g.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
 	return marsh.Profiles, err
 }

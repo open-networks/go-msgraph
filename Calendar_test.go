@@ -7,6 +7,9 @@ import (
 
 func TestCalendar_String(t *testing.T) {
 	testCalendars := GetTestListCalendars(t)
+	if skipCalendarTests {
+		t.Skip("Skipping due to missing 'MSGraphExistingCalendarsOfUser' value")
+	}
 
 	for _, testCalendar := range testCalendars {
 		tt := struct {

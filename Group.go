@@ -41,9 +41,10 @@ func (g *Group) setGraphClient(gC *GraphClient) {
 // ListMembers - Get a list of the group's direct members. A group can have users,
 // contacts, and other groups as members. This operation is not transitive. This
 // method will currently ONLY return User-instances of members
+// Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
 // See https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list_members
-func (g Group) ListMembers() (Users, error) {
+func (g Group) ListMembers(opts ...ListQueryOption) (Users, error) {
 	if g.graphClient == nil {
 		return nil, ErrNotGraphClientSourced
 	}
@@ -53,7 +54,7 @@ func (g Group) ListMembers() (Users, error) {
 		Users Users `json:"value"`
 	}
 	marsh.Users.setGraphClient(g.graphClient)
-	return marsh.Users, g.graphClient.makeGETAPICall(resource, nil, &marsh)
+	return marsh.Users, g.graphClient.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
 }
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library
