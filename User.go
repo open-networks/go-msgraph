@@ -65,10 +65,11 @@ func (u User) ListCalendarView(startDateTime, endDateTime time.Time, opts ...Lis
 		return CalendarEvents{}, ErrNotGraphClientSourced
 	}
 
-	var reqOpt = compileListQueryOptions(opts)
 	if len(globalSupportedTimeZones.Value) == 0 {
 		var err error
-		globalSupportedTimeZones, err = u.getTimeZoneChoices(reqOpt)
+		// TODO: this is a dirty fix, because opts could contain other things than a context, e.g. select
+		// parameters. This could produce unexpected outputs and therefore break the globalSupportedTimeZones variable.
+		globalSupportedTimeZones, err = u.getTimeZoneChoices(compileListQueryOptions(opts))
 		if err != nil {
 			return CalendarEvents{}, err
 		}
@@ -77,6 +78,7 @@ func (u User) ListCalendarView(startDateTime, endDateTime time.Time, opts ...Lis
 	resource := fmt.Sprintf("/users/%v/calendar/calendarview", u.ID)
 
 	// set GET-Params for start and end time
+	var reqOpt = compileListQueryOptions(opts)
 	reqOpt.queryValues.Add("startdatetime", startDateTime.Format("2006-01-02T00:00:00"))
 	reqOpt.queryValues.Add("enddatetime", endDateTime.Format("2006-01-02T00:00:00"))
 
