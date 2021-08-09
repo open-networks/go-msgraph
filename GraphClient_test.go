@@ -340,8 +340,8 @@ func TestGraphClient_ListGroupsWithSelectAndFilter(t *testing.T) {
 			found := false
 			isGraphClientInitialized := true
 
-			if len(got) != 1 {
-				t.Error("GraphClient.ListGroups(): Did not find expected number of results (one).")
+			if len(got) != int(msGraphExistingGroupDisplayNameNumRes) {
+				t.Errorf("GraphClient.ListGroups(): Did not find expected number of results. Wanted: %d, got: %d", msGraphExistingGroupDisplayNameNumRes, len(got))
 			}
 
 			for _, checkObj := range got {
