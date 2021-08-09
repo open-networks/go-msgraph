@@ -375,7 +375,7 @@ func assertZeroFields(tb testing.TB, v interface{}, zeroFieldNames []string, non
 	}
 
 	if err = json.Unmarshal(jsonBytes, &mappedData); err != nil {
-		tb.Fatalf("json.Marshal() error = %v", err)
+		tb.Fatalf("json.Unmarshal() error = %v", err)
 	}
 
 	for _, fieldName := range nonZeroFieldNames {
