@@ -1,4 +1,5 @@
 # Golang Microsoft Graph API implementation
+[![Latest Release](https://img.shields.io/github/v/release/open-networks/go-msgraph)](https://github.com/open-networks/go-msgraph/releases)
 [![Github Actions](https://github.com/open-networks/go-msgraph/actions/workflows/go.yml/badge.svg)](https://github.com/open-networks/go-msgraph/actions)
 [![godoc](https://godoc.org/github.com/open-networks/go-msgraph?status.svg)](https://godoc.org/github.com/open-networks/go-msgraph)
 [![Go Report Card](https://goreportcard.com/badge/github.com/open-networks/go-msgraph)](https://goreportcard.com/report/github.com/open-networks/go-msgraph)
