@@ -6,6 +6,7 @@ import (
 )
 
 func GetTestGroup(t *testing.T) Group {
+	t.Helper()
 	groups, err := graphClient.ListGroups()
 	if err != nil {
 		t.Fatalf("Cannot GraphClient.ListGroups(): %v", err)

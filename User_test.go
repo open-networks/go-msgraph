@@ -8,6 +8,7 @@ import (
 // GetTestUser returns a valid User instance for testing. Will issue a t.Fatalf if the
 // user cannot be loaded
 func GetTestUser(t *testing.T) User {
+	t.Helper()
 	userToTest, errUserToTest := graphClient.GetUser(msGraphExistingUserPrincipalInGroup)
 	if errUserToTest != nil {
 		t.Fatalf("Cannot find user %v for Testing", msGraphExistingUserPrincipalInGroup)
