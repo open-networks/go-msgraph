@@ -35,6 +35,7 @@ jobs:
         MSGraphExistingGroupDisplayName: ${{ secrets.MSGraphExistingGroupDisplayName }}
         MSGraphExistingUserPrincipalInGroup: ${{ secrets.MSGraphExistingUserPrincipalInGroup }}
         MSGraphExistingCalendarsOfUser: ${{ secrets.MSGraphExistingCalendarsOfUser }}
+        MSGraphExistingGroupDisplayNameNumRes: ${{ secrets.MSGraphExistingGroupDisplayNameNumRes }}
       run: go test -coverprofile=coverage.txt -covermode=atomic
     - name: Upload coverage to Codecov
       run: bash <(curl -s https://codecov.io/bash)
