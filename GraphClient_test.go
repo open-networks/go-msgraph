@@ -58,12 +58,12 @@ func TestMain(m *testing.M) {
 	var err error
 	msGraphExistingGroupDisplayNameNumRes, err = strconv.ParseUint(os.Getenv("MSGraphExistingGroupDisplayNameNumRes"), 10, 64)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("Environment variable \"MSGraphExistingGroupDisplayNameNumRes\" seems to be invalid, cannot be parsed to unsigned integer: %v", err))
 	}
 
 	graphClient, err = NewGraphClient(msGraphTenantID, msGraphApplicationID, msGraphClientSecret)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("Cannot initialize a new GraphClient, error: %v", err))
 	}
 
 	os.Exit(m.Run())
