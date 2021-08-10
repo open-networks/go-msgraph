@@ -8,7 +8,7 @@ The following is a set of guidelines for contributing to go-msgraph. These are m
 
 You can either report bugs, create feature requests as an issue so that the community can work on it, or you are very welcome to implement the code yourself and submit it as a pull-request.
 
-## Suggested development environment
+## Suggested Development Environment
 
 The program is as of 08/2021 developed with [Visual Studio Code](https://code.visualstudio.com/) with several plugins and [docker](https://docs.docker.com/). With that setup it's easy to update to the latest docker version and not have any golang version installed locally.
 
@@ -22,7 +22,7 @@ Install the following to use this:
 
 The repository contains a `.devcontainer/devcontainer.json` that automatically configures this docker container used for development.
 
-## Code testing
+## Code Testing
 
 If you want to run `go test` locally, you have to set the following environment variables:
 
@@ -74,6 +74,6 @@ If you use Visual Studio Code without `Remote Contaienrs`, you may place it in `
 }
 ````
 
-## Code styleguide
+## Code Syleguide
 
 * code is formatted with `go fmt`
