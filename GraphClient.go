@@ -46,7 +46,7 @@ func (g *GraphClient) String() string {
 		g.TenantID, g.ApplicationID, firstPart, lastPart, g.token.NotBefore, g.token.ExpiresOn)
 }
 
-// NewGraphClient creates a new GraphClient instance with the given parameters and grab's a token.
+// NewGraphClient creates a new GraphClient instance with the given parameters and grabs a token.
 //
 // Rerturns an error if the token cannot be initialized. This method does not have to be used to create a new GraphClient
 func NewGraphClient(tenantID, applicationID, clientSecret string) (*GraphClient, error) {
@@ -56,7 +56,7 @@ func NewGraphClient(tenantID, applicationID, clientSecret string) (*GraphClient,
 	return &g, g.refreshToken()
 }
 
-// refreshToken refreshes the current Token. Grab's a new one and saves it within the GraphClient instance
+// refreshToken refreshes the current Token. Grabs a new one and saves it within the GraphClient instance
 func (g *GraphClient) refreshToken() error {
 	if g.TenantID == "" {
 		return fmt.Errorf("tenant ID is empty")
