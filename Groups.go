@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// Groups represents multiple Group-instances.
+// Groups represents multiple Group-instances and provides funcs to work with them.
 type Groups []Group
 
 func (g Groups) String() string {
