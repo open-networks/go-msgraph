@@ -8,18 +8,35 @@ import (
 
 // User represents a user from the ms graph API
 type User struct {
-	ID                string   `json:"id"`
-	BusinessPhones    []string `json:"businessPhones"`
-	DisplayName       string   `json:"displayName"`
-	GivenName         string   `json:"givenName"`
-	Mail              string   `json:"mail"`
-	MobilePhone       string   `json:"mobilePhone"`
-	PreferredLanguage string   `json:"preferredLanguage"`
-	Surname           string   `json:"surname"`
-	UserPrincipalName string   `json:"userPrincipalName"`
+	ID                string            `json:"id,omitempty"`
+	BusinessPhones    []string          `json:"businessPhones,omitempty"`
+	DisplayName       string            `json:"displayName,omitempty"`
+	GivenName         string            `json:"givenName,omitempty"`
+	Mail              string            `json:"mail,omitempty"`
+	MobilePhone       string            `json:"mobilePhone,omitempty"`
+	PreferredLanguage string            `json:"preferredLanguage,omitempty"`
+	Surname           string            `json:"surname,omitempty"`
+	UserPrincipalName string            `json:"userPrincipalName,omitempty"`
+	AccountEnabled    bool              `json:"accountEnabled,omitempty"`
+	AssignedLicenses  []AssignedLicense `json:"assignedLicenses,omitempty"`
+	CompanyName       string            `json:"companyName,omitempty"`
+	Department        string            `json:"department,omitempty"`
+	MailNickname      string            `json:"mailNickname,omitempty"`
+	PasswordProfile   PasswordProfile   `json:"passwordProfile,omitempty"`
 
 	activePhone string       // private cache for the active phone number
 	graphClient *GraphClient // the graphClient that called the user
+}
+
+type AssignedLicense struct {
+	DisabledPlans []string `json:"disabledPlans,omitempty"`
+	SkuID         string   `json:"skuId,omitempty"`
+}
+
+type PasswordProfile struct {
+	ForceChangePasswordNextSignIn        bool   `json:"forceChangePasswordNextSignIn,omitempty"`
+	ForceChangePasswordNextSignInWithMfa bool   `json:"forceChangePasswordNextSignInWithMfa,omitempty"`
+	Password                             string `json:"password,omitempty"`
 }
 
 func (u *User) String() string {

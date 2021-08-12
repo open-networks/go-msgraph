@@ -14,10 +14,10 @@ import (
 var FullDayEventTimeZone = time.Local
 
 // LoginBaseURL represents the basic url used to acquire a token for the msgraph api
-const LoginBaseURL string = "https://login.microsoftonline.com"
+var LoginBaseURL string = "https://login.microsoftonline.com"
 
 // BaseURL represents the URL used to perform all ms graph API-calls
-const BaseURL string = "https://graph.microsoft.com"
+var BaseURL string = "https://graph.microsoft.com"
 
 // APIVersion represents the APIVersion of msgraph used by this implementation
 const APIVersion string = "v1.0"
