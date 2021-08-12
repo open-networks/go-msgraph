@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -51,19 +50,6 @@ func (g *GraphClient) String() string {
 //
 // Rerturns an error if the token cannot be initialized. This method does not have to be used to create a new GraphClient
 func NewGraphClient(tenantID, applicationID, clientSecret string) (*GraphClient, error) {
-	g := GraphClient{TenantID: tenantID, ApplicationID: applicationID, ClientSecret: clientSecret}
-	g.apiCall.Lock()         // lock because we will refresh the token
-	defer g.apiCall.Unlock() // unlock after token refresh
-	return &g, g.refreshToken()
-}
-
-// NewGraphClient creates a new GraphClient instance with the given parameters and grabs a token.
-//
-// Rerturns an error if the token cannot be initialized. This method does not have to be used to create a new GraphClient
-func NewGraphClientCustom(tenantID, applicationID, clientSecret string, loginUrl string, baseUrl string) (*GraphClient, error) {
-	LoginBaseURL = loginUrl
-	BaseURL = baseUrl
-
 	g := GraphClient{TenantID: tenantID, ApplicationID: applicationID, ClientSecret: clientSecret}
 	g.apiCall.Lock()         // lock because we will refresh the token
 	defer g.apiCall.Unlock() // unlock after token refresh
@@ -150,88 +136,6 @@ func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams,
 	return g.performRequest(req, v)
 }
 
-// makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
-func (g *GraphClient) makePOSTAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
-	g.apiCall.Lock()
-	defer g.apiCall.Unlock() // unlock when the func returns
-	// Check token
-	if g.token.WantsToBeRefreshed() { // Token not valid anymore?
-		err := g.refreshToken()
-		if err != nil {
-			return err
-		}
-	}
-
-	reqURL, err := url.ParseRequestURI(BaseURL)
-	if err != nil {
-		return fmt.Errorf("unable to parse URI %v: %v", BaseURL, err)
-	}
-
-	// Add Version to API-Call, the leading slash is always added by the calling func
-	reqURL.Path = "/" + APIVersion + apiCall
-
-	req, err := http.NewRequestWithContext(reqParams.Context(), http.MethodPost, reqURL.String(), body)
-	if err != nil {
-		return fmt.Errorf("HTTP request error: %v", err)
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", g.token.GetAccessToken())
-
-	for key, vals := range reqParams.Headers() {
-		for idx := range vals {
-			req.Header.Add(key, vals[idx])
-		}
-	}
-
-	var getParams = reqParams.Values()
-
-	req.URL.RawQuery = getParams.Encode() // set query parameters
-
-	return g.performRequest(req, v)
-}
-
-// makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
-func (g *GraphClient) makePatchAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
-	g.apiCall.Lock()
-	defer g.apiCall.Unlock() // unlock when the func returns
-	// Check token
-	if g.token.WantsToBeRefreshed() { // Token not valid anymore?
-		err := g.refreshToken()
-		if err != nil {
-			return err
-		}
-	}
-
-	reqURL, err := url.ParseRequestURI(BaseURL)
-	if err != nil {
-		return fmt.Errorf("unable to parse URI %v: %v", BaseURL, err)
-	}
-
-	// Add Version to API-Call, the leading slash is always added by the calling func
-	reqURL.Path = "/" + APIVersion + apiCall
-
-	req, err := http.NewRequestWithContext(reqParams.Context(), http.MethodPatch, reqURL.String(), body)
-	if err != nil {
-		return fmt.Errorf("HTTP request error: %v", err)
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", g.token.GetAccessToken())
-
-	for key, vals := range reqParams.Headers() {
-		for idx := range vals {
-			req.Header.Add(key, vals[idx])
-		}
-	}
-
-	var getParams = reqParams.Values()
-
-	req.URL.RawQuery = getParams.Encode() // set query parameters
-
-	return g.performRequest(req, v)
-}
-
 // performRequest performs a pre-prepared http.Request and does the proper error-handling for it.
 // does a json.Unmarshal into the v interface{} and returns the error of it if everything went well so far.
 func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
@@ -257,9 +161,6 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 		return fmt.Errorf("HTTP response read error: %v of http.Request: %v", err, req.URL)
 	}
 
-	if v == nil {
-		return nil
-	}
 	return json.Unmarshal(body, &v) // return the error of the json unmarshal
 }
 
@@ -401,16 +302,6 @@ func compileListQueryOptions(options []ListQueryOption) *listQueryOptions {
 	return opts
 }
 
-func compileEmptyQueryOptions() *listQueryOptions {
-	var opts = &listQueryOptions{
-		getQueryOptions: getQueryOptions{
-			queryValues: url.Values{},
-		},
-		queryHeaders: http.Header{},
-	}
-	return opts
-}
-
 // ListGroups returns a list of all groups
 // Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
@@ -449,39 +340,6 @@ func (g *GraphClient) GetGroup(groupID string, opts ...GetQueryOption) (Group, e
 	group := Group{graphClient: g}
 	err := g.makeGETAPICall(resource, compileGetQueryOptions(opts), &group)
 	return group, err
-}
-
-// CreateUser creates a new user given a user object and returns and updated object
-// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-post-users
-func (g *GraphClient) CreateUser(userInput *User) (User, error) {
-	user := User{graphClient: g}
-	bodyBytes, err := json.Marshal(userInput)
-	if err != nil {
-		return user, err
-	}
-
-	reader := bytes.NewReader(bodyBytes)
-	opts := compileEmptyQueryOptions()
-	err = g.makePOSTAPICall("/users", opts, reader, &user)
-
-	return user, err
-}
-
-// Patches a user given a user object. Note, only set the fields that should be changed
-// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-update
-func (g *GraphClient) UpdateUser(identifier string, userInput *User) error {
-	resource := fmt.Sprintf("/users/%v", identifier)
-
-	bodyBytes, err := json.Marshal(userInput)
-	if err != nil {
-		return err
-	}
-
-	reader := bytes.NewReader(bodyBytes)
-	opts := compileEmptyQueryOptions()
-	err = g.makePatchAPICall(resource, opts, reader, nil)
-
-	return err
 }
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library.
