@@ -35,6 +35,11 @@ type GraphClient struct {
 	ClientSecret  string // See https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key
 
 	token Token // the current token to be used
+
+	// azureADAuthEndpoint is used for this instance of GraphClient. For available endpoints see https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud#azure-ad-authentication-endpoints
+	azureADAuthEndpoint string
+	// serviceRootEndpoint is the basic API-url used for this instance of GraphClient, namely Microsoft Graph service root endpoints. For available endpoints see https://docs.microsoft.com/en-us/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints.
+	serviceRootEndpoint string
 }
 
 func (g *GraphClient) String() string {
@@ -47,24 +52,33 @@ func (g *GraphClient) String() string {
 		g.TenantID, g.ApplicationID, firstPart, lastPart, g.token.NotBefore, g.token.ExpiresOn)
 }
 
-// NewGraphClient creates a new GraphClient instance with the given parameters and grabs a token.
+// NewGraphClient creates a new GraphClient instance with the given parameters
+// and grabs a token. Returns an error if the token cannot be initialized. The
+// default ms graph API global endpoint is used.
 //
-// Rerturns an error if the token cannot be initialized. This method does not have to be used to create a new GraphClient
+// This method does not have to be used to create a new GraphClient. If not used, the default global ms Graph API endpoint is used.
 func NewGraphClient(tenantID, applicationID, clientSecret string) (*GraphClient, error) {
-	g := GraphClient{TenantID: tenantID, ApplicationID: applicationID, ClientSecret: clientSecret}
-	g.apiCall.Lock()         // lock because we will refresh the token
-	defer g.apiCall.Unlock() // unlock after token refresh
-	return &g, g.refreshToken()
+	return NewGraphClientWithCustomEndpoint(tenantID, applicationID, clientSecret, AzureADAuthEndpointGlobal, ServiceRootEndpointGlobal)
 }
 
-// NewGraphClient creates a new GraphClient instance with the given parameters and grabs a token.
+// NewGraphClientCustomEndpoint creates a new GraphClient instance with the
+// given parameters and tries to get a valid token. All available public endpoints
+// for azureADAuthEndpoint and serviceRootEndpoint are available via msgraph.azureADAuthEndpoint*  and msgraph.ServiceRootEndpoint*
 //
-// Rerturns an error if the token cannot be initialized. This method does not have to be used to create a new GraphClient
-func NewGraphClientCustom(tenantID, applicationID, clientSecret string, loginUrl string, baseUrl string) (*GraphClient, error) {
-	LoginBaseURL = loginUrl
-	BaseURL = baseUrl
-
-	g := GraphClient{TenantID: tenantID, ApplicationID: applicationID, ClientSecret: clientSecret}
+// For available endpoints from Microsoft, see documentation:
+//   * Authentication Endpoints: https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud#azure-ad-authentication-endpoints
+//   * Service Root Endpoints: https://docs.microsoft.com/en-us/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints
+//
+// Returns an error if the token cannot be initialized. This func does not have
+// to be used to create a new GraphClient.
+func NewGraphClientWithCustomEndpoint(tenantID, applicationID, clientSecret string, azureADAuthEndpoint string, serviceRootEndpoint string) (*GraphClient, error) {
+	g := GraphClient{
+		TenantID:            tenantID,
+		ApplicationID:       applicationID,
+		ClientSecret:        clientSecret,
+		azureADAuthEndpoint: azureADAuthEndpoint,
+		serviceRootEndpoint: serviceRootEndpoint,
+	}
 	g.apiCall.Lock()         // lock because we will refresh the token
 	defer g.apiCall.Unlock() // unlock after token refresh
 	return &g, g.refreshToken()
@@ -80,9 +94,9 @@ func (g *GraphClient) refreshToken() error {
 	data.Add("grant_type", "client_credentials")
 	data.Add("client_id", g.ApplicationID)
 	data.Add("client_secret", g.ClientSecret)
-	data.Add("resource", BaseURL)
+	data.Add("resource", g.serviceRootEndpoint)
 
-	u, err := url.ParseRequestURI(LoginBaseURL)
+	u, err := url.ParseRequestURI(g.azureADAuthEndpoint)
 	if err != nil {
 		return fmt.Errorf("unable to parse URI: %v", err)
 	}
@@ -118,9 +132,9 @@ func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams,
 		}
 	}
 
-	reqURL, err := url.ParseRequestURI(BaseURL)
+	reqURL, err := url.ParseRequestURI(g.serviceRootEndpoint)
 	if err != nil {
-		return fmt.Errorf("unable to parse URI %v: %v", BaseURL, err)
+		return fmt.Errorf("unable to parse URI %v: %v", g.serviceRootEndpoint, err)
 	}
 
 	// Add Version to API-Call, the leading slash is always added by the calling func
@@ -162,9 +176,9 @@ func (g *GraphClient) makePOSTAPICall(apiCall string, reqParams getRequestParams
 		}
 	}
 
-	reqURL, err := url.ParseRequestURI(BaseURL)
+	reqURL, err := url.ParseRequestURI(g.serviceRootEndpoint)
 	if err != nil {
-		return fmt.Errorf("unable to parse URI %v: %v", BaseURL, err)
+		return fmt.Errorf("unable to parse URI %v: %v", g.serviceRootEndpoint, err)
 	}
 
 	// Add Version to API-Call, the leading slash is always added by the calling func
@@ -203,9 +217,9 @@ func (g *GraphClient) makePatchAPICall(apiCall string, reqParams getRequestParam
 		}
 	}
 
-	reqURL, err := url.ParseRequestURI(BaseURL)
+	reqURL, err := url.ParseRequestURI(g.serviceRootEndpoint)
 	if err != nil {
-		return fmt.Errorf("unable to parse URI %v: %v", BaseURL, err)
+		return fmt.Errorf("unable to parse URI %v: %v", g.serviceRootEndpoint, err)
 	}
 
 	// Add Version to API-Call, the leading slash is always added by the calling func
@@ -477,9 +491,11 @@ func (g *GraphClient) UpdateUser(identifier string, userInput *User) error {
 // and returns an error if any of the data provided is incorrect or the token cannot be acquired
 func (g *GraphClient) UnmarshalJSON(data []byte) error {
 	tmp := struct {
-		TenantID      string
-		ApplicationID string
-		ClientSecret  string
+		TenantID            string
+		ApplicationID       string
+		ClientSecret        string
+		AzureADAuthEndpoint string
+		ServiceRootEndpoint string
 	}{}
 
 	err := json.Unmarshal(data, &tmp)
@@ -498,6 +514,14 @@ func (g *GraphClient) UnmarshalJSON(data []byte) error {
 	g.ClientSecret = tmp.ClientSecret
 	if g.ClientSecret == "" {
 		return fmt.Errorf("ClientSecret is empty")
+	}
+	g.azureADAuthEndpoint = tmp.AzureADAuthEndpoint
+	if g.azureADAuthEndpoint == "" { // If AzureADAuthEndpoint is not set, use the global endpoint
+		g.azureADAuthEndpoint = AzureADAuthEndpointGlobal
+	}
+	g.serviceRootEndpoint = tmp.ServiceRootEndpoint
+	if g.serviceRootEndpoint == "" { // If ServiceRootEndpoint is not set, use the global endpoint
+		g.serviceRootEndpoint = ServiceRootEndpointGlobal
 	}
 
 	// get a token and return the error (if any)

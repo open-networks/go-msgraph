@@ -24,7 +24,7 @@ The repository contains a `.devcontainer/devcontainer.json` that automatically c
 
 ## Code Testing
 
-If you want to run `go test` locally, you have to set the following environment variables:
+If you want to run `go test` locally, you *must* set the following environment variables:
 
 * `MSGraphTenantID`: Microsoft Graph API TenantID
 * `MSGraphApplicationID`: Microsoft Graph Application ID
@@ -32,6 +32,10 @@ If you want to run `go test` locally, you have to set the following environment 
 * `MSGraphExistingGroupDisplayName`: The name of an existing Group in Azure Active Directory
 * `MSGraphExistingGroupDisplayNameNumRes`: The number of results when searching for the above group. E.g. the group "users" will return three results upon searching, if the following groups exist: "users", "users-sales", "technicians-users-only"
 * `MSGraphExistingUserPrincipalInGroup`: a `userPrincipalName` that is member of the group above, format: `alice@contoso.com`
+
+Furthermore, the following environment variables are *optional*:
+* `MSGraphAzureADAuthEndpoint`: Defaults to `msgraph.AzureADAuthEndpoint`, hence https://login.microsoftonline.com. Set this environment variable to use e.g. a US endpoint
+* `MSGraphServiceRootEndpoint`: Defaults to `msgraph.ServiceRootEndpoint`, hence https://graph.microsoft.com. Set this environment variable to use e.g. a US endpoint
 * `MSGraphExistingCalendarsOfUser`: Existing calendars of the above users, separated by a comma (`,`). This is optional, tests are skipped if not present. In case you dont use Office 365 / Mailboxes.
 
 This may be done locally, or in `.devcontainer/devcontainer.json` if you use my suggested environment, but be careful not to add the changes to the commit (!):
@@ -51,6 +55,8 @@ This may be done locally, or in `.devcontainer/devcontainer.json` if you use my 
             "MSGraphExistingGroupDisplayName": "technicians",
             "MSGraphExistingGroupDisplayNameNumRes" : "1",
             "MSGraphExistingUserPrincipalInGroup": "alice@contoso.com",
+            "MSGraphAzureADAuthEndpoint": "https://login.microsoftonline.com",
+            "MSGraphServiceRootEndpoint": "https://graph.microsoft.com",
             "MSGraphExistingCalendarsOfUser" : "Calendar,Birthdays",
 		},
 	},
