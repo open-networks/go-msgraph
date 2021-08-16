@@ -13,11 +13,54 @@ import (
 // probably even back to time.UTC
 var FullDayEventTimeZone = time.Local
 
-// LoginBaseURL represents the basic url used to acquire a token for the msgraph api
-var LoginBaseURL string = "https://login.microsoftonline.com"
+const (
 
-// BaseURL represents the URL used to perform all ms graph API-calls
-var BaseURL string = "https://graph.microsoft.com"
+	// Azure AD authentication endpoint "Global". Used to aquire a token for the ms graph API connection.
+	//
+	// Microsoft Documentation: https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud#azure-ad-authentication-endpoints
+	AzureADAuthEndpointGlobal string = "https://login.microsoftonline.com"
+
+	// Azure AD authentication endpoint "Germany". Used to aquire a token for the ms graph API connection.
+	//
+	// Microsoft Documentation: https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud#azure-ad-authentication-endpoints
+	AzureADAuthEndpointGermany string = "https://login.microsoftonline.de"
+
+	// Azure AD authentication endpoint "US Government". Used to aquire a token for the ms graph API connection.
+	//
+	// Microsoft Documentation: https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud#azure-ad-authentication-endpoints
+	AzureADAuthEndpointUSGov string = "https://login.microsoftonline.us"
+
+	// Azure AD authentication endpoint "China by 21 Vianet". Used to aquire a token for the ms graph API connection.
+	//
+	// Microsoft Documentation: https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud#azure-ad-authentication-endpoints
+	AzureADAuthEndpointChina string = "https://login.partner.microsoftonline.cn"
+
+	// ServiceRootEndpointGlobal represents the default Service Root Endpoint used to perform all ms graph
+	// API-calls, hence the Service Root Endpoint.
+	//
+	// See https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud#azure-ad-authentication-endpoints
+	ServiceRootEndpointGlobal string = "https://graph.microsoft.com"
+
+	// Service Root Endpoint "US Government L4".
+	//
+	// See https://docs.microsoft.com/en-us/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints
+	ServiceRootEndpointUSGovL4 string = "https://graph.microsoft.us"
+
+	// Service Root Endpoint "US Government L5 (DOD)".
+	//
+	// See https://docs.microsoft.com/en-us/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints
+	ServiceRootEndpointUSGovL5 string = "https://dod-graph.microsoft.us"
+
+	// Service Root Endpoint "Germany".
+	//
+	// See https://docs.microsoft.com/en-us/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints
+	ServiceRootEndpointGermany string = "https://graph.microsoft.de"
+
+	// Service Root Endpoint "China operated by 21Vianet".
+	//
+	// See https://docs.microsoft.com/en-us/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints
+	ServiceRootEndpointChina string = "https://microsoftgraph.chinacloudapi.cn"
+)
 
 // APIVersion represents the APIVersion of msgraph used by this implementation
 const APIVersion string = "v1.0"
