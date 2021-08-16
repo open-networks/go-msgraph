@@ -84,8 +84,21 @@ func NewGraphClientWithCustomEndpoint(tenantID, applicationID, clientSecret stri
 	return &g, g.refreshToken()
 }
 
+// makeSureURLsAreSet ensures that the two fields g.azureADAuthEndpoint and g.serviceRootEndpoint
+// of the graphClient are set and therefore not empty. If they are currently empty
+// they will be set to the constants AzureADAuthEndpointGlobal and ServiceRootEndpointGlobal.
+func (g *GraphClient) makeSureURLsAreSet() {
+	if g.azureADAuthEndpoint == "" { // If AzureADAuthEndpoint is not set, use the global endpoint
+		g.azureADAuthEndpoint = AzureADAuthEndpointGlobal
+	}
+	if g.serviceRootEndpoint == "" { // If ServiceRootEndpoint is not set, use the global endpoint
+		g.serviceRootEndpoint = ServiceRootEndpointGlobal
+	}
+}
+
 // refreshToken refreshes the current Token. Grabs a new one and saves it within the GraphClient instance
 func (g *GraphClient) refreshToken() error {
+	g.makeSureURLsAreSet()
 	if g.TenantID == "" {
 		return fmt.Errorf("tenant ID is empty")
 	}
@@ -122,6 +135,7 @@ func (g *GraphClient) refreshToken() error {
 
 // makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
 func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams, v interface{}) error {
+	g.makeSureURLsAreSet()
 	g.apiCall.Lock()
 	defer g.apiCall.Unlock() // unlock when the func returns
 	// Check token
@@ -166,6 +180,7 @@ func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams,
 
 // makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
 func (g *GraphClient) makePOSTAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
+	g.makeSureURLsAreSet()
 	g.apiCall.Lock()
 	defer g.apiCall.Unlock() // unlock when the func returns
 	// Check token
@@ -207,6 +222,7 @@ func (g *GraphClient) makePOSTAPICall(apiCall string, reqParams getRequestParams
 
 // makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
 func (g *GraphClient) makePatchAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
+	g.makeSureURLsAreSet()
 	g.apiCall.Lock()
 	defer g.apiCall.Unlock() // unlock when the func returns
 	// Check token
@@ -516,13 +532,8 @@ func (g *GraphClient) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("ClientSecret is empty")
 	}
 	g.azureADAuthEndpoint = tmp.AzureADAuthEndpoint
-	if g.azureADAuthEndpoint == "" { // If AzureADAuthEndpoint is not set, use the global endpoint
-		g.azureADAuthEndpoint = AzureADAuthEndpointGlobal
-	}
 	g.serviceRootEndpoint = tmp.ServiceRootEndpoint
-	if g.serviceRootEndpoint == "" { // If ServiceRootEndpoint is not set, use the global endpoint
-		g.serviceRootEndpoint = ServiceRootEndpointGlobal
-	}
+	g.makeSureURLsAreSet()
 
 	// get a token and return the error (if any)
 	err = g.refreshToken()
