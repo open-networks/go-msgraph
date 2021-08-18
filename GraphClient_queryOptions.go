@@ -16,6 +16,10 @@ type GetQueryOption func(opts *getQueryOptions)
 
 type ListQueryOption func(opts *listQueryOptions)
 
+type CreateQueryOption func(opts *createQueryOptions)
+
+type PatchQueryOption func(opts *patchQueryOptions)
+
 var (
 	// GetWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
 	GetWithContext = func(ctx context.Context) GetQueryOption {
@@ -57,6 +61,20 @@ var (
 		return func(opts *listQueryOptions) {
 			opts.queryHeaders.Add("ConsistencyLevel", "eventual")
 			opts.queryValues.Add(odataSearchParamKey, searchParam)
+		}
+	}
+
+	// CreateWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
+	CreateWithContext = func(ctx context.Context) CreateQueryOption {
+		return func(opts *createQueryOptions) {
+			opts.ctx = ctx
+		}
+	}
+
+	// PatchWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
+	PatchWithContext = func(ctx context.Context) PatchQueryOption {
+		return func(opts *patchQueryOptions) {
+			opts.ctx = ctx
 		}
 	}
 )
@@ -122,6 +140,56 @@ func compileListQueryOptions(options []ListQueryOption) *listQueryOptions {
 			queryValues: url.Values{},
 		},
 		queryHeaders: http.Header{},
+	}
+	for idx := range options {
+		options[idx](opts)
+	}
+
+	return opts
+}
+
+// createQueryOptions allows to add a context to the request
+type createQueryOptions struct {
+	getQueryOptions
+}
+
+func (g *createQueryOptions) Context() context.Context {
+	if g.ctx == nil {
+		return context.Background()
+	}
+	return g.ctx
+}
+
+func compileCreateQueryOptions(options []CreateQueryOption) *createQueryOptions {
+	var opts = &createQueryOptions{
+		getQueryOptions: getQueryOptions{
+			queryValues: url.Values{},
+		},
+	}
+	for idx := range options {
+		options[idx](opts)
+	}
+
+	return opts
+}
+
+// patchQueryOptions allows to add a context to the request
+type patchQueryOptions struct {
+	getQueryOptions
+}
+
+func (g *patchQueryOptions) Context() context.Context {
+	if g.ctx == nil {
+		return context.Background()
+	}
+	return g.ctx
+}
+
+func compilePatchQueryOptions(options []PatchQueryOption) *patchQueryOptions {
+	var opts = &patchQueryOptions{
+		getQueryOptions: getQueryOptions{
+			queryValues: url.Values{},
+		},
 	}
 	for idx := range options {
 		options[idx](opts)

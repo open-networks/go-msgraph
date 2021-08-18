@@ -282,7 +282,7 @@ func (g *GraphClient) GetGroup(groupID string, opts ...GetQueryOption) (Group, e
 
 // CreateUser creates a new user given a user object and returns and updated object
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-post-users
-func (g *GraphClient) CreateUser(userInput *User) (User, error) {
+func (g *GraphClient) CreateUser(userInput *User, opts ...CreateQueryOption) (User, error) {
 	user := User{graphClient: g}
 	bodyBytes, err := json.Marshal(userInput)
 	if err != nil {
@@ -290,15 +290,14 @@ func (g *GraphClient) CreateUser(userInput *User) (User, error) {
 	}
 
 	reader := bytes.NewReader(bodyBytes)
-	opts := compileEmptyQueryOptions()
-	err = g.makePOSTAPICall("/users", opts, reader, &user)
+	err = g.makePOSTAPICall("/users", compileCreateQueryOptions(opts), reader, &user)
 
 	return user, err
 }
 
 // Patches a user given a user object. Note, only set the fields that should be changed
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-update
-func (g *GraphClient) UpdateUser(identifier string, userInput *User) error {
+func (g *GraphClient) UpdateUser(identifier string, userInput *User, opts ...PatchQueryOption) error {
 	resource := fmt.Sprintf("/users/%v", identifier)
 
 	bodyBytes, err := json.Marshal(userInput)
@@ -307,9 +306,8 @@ func (g *GraphClient) UpdateUser(identifier string, userInput *User) error {
 	}
 
 	reader := bytes.NewReader(bodyBytes)
-	opts := compileEmptyQueryOptions()
 	// TODO: check return body, maybe there is some potential success or error message hidden in it?
-	err = g.makePATCHAPICall(resource, opts, reader, nil)
+	err = g.makePATCHAPICall(resource, compilePatchQueryOptions(opts), reader, nil)
 
 	return err
 }
@@ -354,14 +352,4 @@ func (g *GraphClient) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("can't get Token: %v", err)
 	}
 	return nil
-}
-
-func compileEmptyQueryOptions() *listQueryOptions {
-	var opts = &listQueryOptions{
-		getQueryOptions: getQueryOptions{
-			queryValues: url.Values{},
-		},
-		queryHeaders: http.Header{},
-	}
-	return opts
 }
