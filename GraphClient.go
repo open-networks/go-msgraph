@@ -295,23 +295,6 @@ func (g *GraphClient) CreateUser(userInput *User, opts ...CreateQueryOption) (Us
 	return user, err
 }
 
-// Patches a user given a user object. Note, only set the fields that should be changed
-// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-update
-func (g *GraphClient) PatchUser(identifier string, userInput *User, opts ...PatchQueryOption) error {
-	resource := fmt.Sprintf("/users/%v", identifier)
-
-	bodyBytes, err := json.Marshal(userInput)
-	if err != nil {
-		return err
-	}
-
-	reader := bytes.NewReader(bodyBytes)
-	// TODO: check return body, maybe there is some potential success or error message hidden in it?
-	err = g.makePATCHAPICall(resource, compilePatchQueryOptions(opts), reader, nil)
-
-	return err
-}
-
 // UnmarshalJSON implements the json unmarshal to be used by the json-library.
 // This method additionally to loading the TenantID, ApplicationID and ClientSecret
 // immediately gets a Token from msgraph (hence initialize this GraphAPI instance)
