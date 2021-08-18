@@ -22,7 +22,7 @@ if err != nil {
 // create new context:
 ctx, cancel := context.WithCancel(context.Background())
 // example for Get-func:
-users, err := graphClient.GetUser("dumpty@contoso.com", msgraph.GetWithContext(ctx))
+user, err := graphClient.GetUser("dumpty@contoso.com", msgraph.GetWithContext(ctx))
 // example for List-func:
 users, err := graphClient.ListUsers(msgraph.ListWithContext(ctx))
 // example for Create-func:
