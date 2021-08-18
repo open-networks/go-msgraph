@@ -6,6 +6,8 @@ Two functions have been created to implement context awareness:
 
 * `msgraph.GetWithContext(<context>)`
 * `msgraph.ListWithContext(<context>)`
+* `msgraph.CreateWithContext(<context>)`
+* `msgraph.PatchWithContext(<context>)`
 
 The result of those two functions must be passed as parameter to the respective `Get` or `List` function.
 
@@ -23,6 +25,8 @@ ctx, cancel := context.WithCancel(context.Background())
 users, err := graphClient.GetUser("dumpty@contoso.com", msgraph.GetWithContext(ctx))
 // example for List-func:
 users, err := graphClient.ListUsers(msgraph.ListWithContext(ctx))
+// example for Create-func:
+user, err := graphClient.CreateUser(msgraph.CreateWithContext(ctx))
 ````
 
 Note: the use of a context is optional. If no context is given, the context `context.Background()` will automatically be used for all API-calls.
