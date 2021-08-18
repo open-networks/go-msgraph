@@ -5,7 +5,6 @@ package msgraph
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -135,93 +134,25 @@ func (g *GraphClient) refreshToken() error {
 
 // makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
 func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams, v interface{}) error {
-	g.makeSureURLsAreSet()
-	g.apiCall.Lock()
-	defer g.apiCall.Unlock() // unlock when the func returns
-	// Check token
-	if g.token.WantsToBeRefreshed() { // Token not valid anymore?
-		err := g.refreshToken()
-		if err != nil {
-			return err
-		}
-	}
-
-	reqURL, err := url.ParseRequestURI(g.serviceRootEndpoint)
-	if err != nil {
-		return fmt.Errorf("unable to parse URI %v: %v", g.serviceRootEndpoint, err)
-	}
-
-	// Add Version to API-Call, the leading slash is always added by the calling func
-	reqURL.Path = "/" + APIVersion + apiCall
-
-	req, err := http.NewRequestWithContext(reqParams.Context(), http.MethodGet, reqURL.String(), nil)
-	if err != nil {
-		return fmt.Errorf("HTTP request error: %v", err)
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", g.token.GetAccessToken())
-
-	for key, vals := range reqParams.Headers() {
-		for idx := range vals {
-			req.Header.Add(key, vals[idx])
-		}
-	}
-
-	var getParams = reqParams.Values()
-
-	// TODO: Improve performance with using $skip & paging instead of retrieving all results with $top
-	// TODO: MaxPageSize is currently 999, if there are any time more than 999 entries this will make the program unpredictable... hence start to use paging (!)
-	getParams.Add("$top", strconv.Itoa(MaxPageSize))
-	req.URL.RawQuery = getParams.Encode() // set query parameters
-
-	return g.performRequest(req, v)
+	return g.makeAPICall(apiCall, http.MethodGet, reqParams, nil, v)
 }
 
 // makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
 func (g *GraphClient) makePOSTAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
-	g.makeSureURLsAreSet()
-	g.apiCall.Lock()
-	defer g.apiCall.Unlock() // unlock when the func returns
-	// Check token
-	if g.token.WantsToBeRefreshed() { // Token not valid anymore?
-		err := g.refreshToken()
-		if err != nil {
-			return err
-		}
-	}
-
-	reqURL, err := url.ParseRequestURI(g.serviceRootEndpoint)
-	if err != nil {
-		return fmt.Errorf("unable to parse URI %v: %v", g.serviceRootEndpoint, err)
-	}
-
-	// Add Version to API-Call, the leading slash is always added by the calling func
-	reqURL.Path = "/" + APIVersion + apiCall
-
-	req, err := http.NewRequestWithContext(reqParams.Context(), http.MethodPost, reqURL.String(), body)
-	if err != nil {
-		return fmt.Errorf("HTTP request error: %v", err)
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", g.token.GetAccessToken())
-
-	for key, vals := range reqParams.Headers() {
-		for idx := range vals {
-			req.Header.Add(key, vals[idx])
-		}
-	}
-
-	var getParams = reqParams.Values()
-
-	req.URL.RawQuery = getParams.Encode() // set query parameters
-
-	return g.performRequest(req, v)
+	return g.makeAPICall(apiCall, http.MethodPost, reqParams, body, v)
 }
 
-// makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
-func (g *GraphClient) makePatchAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
+// makePATCHAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
+func (g *GraphClient) makePATCHAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
+	return g.makeAPICall(apiCall, http.MethodPatch, reqParams, body, v)
+}
+
+// makeAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls.
+//
+// Parameter httpMethod may be http.MethodGet, http.MethodPost or http.MethodPatch
+//
+// Parameter body may be nil to not provide any content - e.g. when using a http GET request.
+func (g *GraphClient) makeAPICall(apiCall string, httpMethod string, reqParams getRequestParams, body io.Reader, v interface{}) error {
 	g.makeSureURLsAreSet()
 	g.apiCall.Lock()
 	defer g.apiCall.Unlock() // unlock when the func returns
@@ -241,7 +172,7 @@ func (g *GraphClient) makePatchAPICall(apiCall string, reqParams getRequestParam
 	// Add Version to API-Call, the leading slash is always added by the calling func
 	reqURL.Path = "/" + APIVersion + apiCall
 
-	req, err := http.NewRequestWithContext(reqParams.Context(), http.MethodPatch, reqURL.String(), body)
+	req, err := http.NewRequestWithContext(reqParams.Context(), httpMethod, reqURL.String(), body)
 	if err != nil {
 		return fmt.Errorf("HTTP request error: %v", err)
 	}
@@ -257,6 +188,11 @@ func (g *GraphClient) makePatchAPICall(apiCall string, reqParams getRequestParam
 
 	var getParams = reqParams.Values()
 
+	if httpMethod == http.MethodGet {
+		// TODO: Improve performance with using $skip & paging instead of retrieving all results with $top
+		// TODO: MaxPageSize is currently 999, if there are any time more than 999 entries this will make the program unpredictable... hence start to use paging (!)
+		getParams.Add("$top", strconv.Itoa(MaxPageSize))
+	}
 	req.URL.RawQuery = getParams.Encode() // set query parameters
 
 	return g.performRequest(req, v)
@@ -304,130 +240,6 @@ func (g *GraphClient) ListUsers(opts ...ListQueryOption) (Users, error) {
 	return marsh.Users, err
 }
 
-type getRequestParams interface {
-	Context() context.Context
-	Values() url.Values
-	Headers() http.Header
-}
-
-type GetQueryOption func(opts *getQueryOptions)
-
-type ListQueryOption func(opts *listQueryOptions)
-
-var (
-	// GetWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
-	GetWithContext = func(ctx context.Context) GetQueryOption {
-		return func(opts *getQueryOptions) {
-			opts.ctx = ctx
-		}
-	}
-
-	// GetWithSelect - $select - Filters properties (columns) - https://docs.microsoft.com/en-us/graph/query-parameters#select-parameter
-	GetWithSelect = func(selectParam string) GetQueryOption {
-		return func(opts *getQueryOptions) {
-			opts.queryValues.Add(odataSelectParamKey, selectParam)
-		}
-	}
-
-	// ListWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
-	ListWithContext = func(ctx context.Context) ListQueryOption {
-		return func(opts *listQueryOptions) {
-			opts.ctx = ctx
-		}
-	}
-
-	// ListWithSelect - $select - Filters properties (columns) - https://docs.microsoft.com/en-us/graph/query-parameters#select-parameter
-	ListWithSelect = func(selectParam string) ListQueryOption {
-		return func(opts *listQueryOptions) {
-			opts.queryValues.Add(odataSelectParamKey, selectParam)
-		}
-	}
-
-	// ListWithFilter - $filter - Filters results (rows) - https://docs.microsoft.com/en-us/graph/query-parameters#filter-parameter
-	ListWithFilter = func(filterParam string) ListQueryOption {
-		return func(opts *listQueryOptions) {
-			opts.queryValues.Add(odataFilterParamKey, filterParam)
-		}
-	}
-
-	// ListWithSearch - $search - Returns results based on search criteria - https://docs.microsoft.com/en-us/graph/query-parameters#search-parameter
-	ListWithSearch = func(searchParam string) ListQueryOption {
-		return func(opts *listQueryOptions) {
-			opts.queryHeaders.Add("ConsistencyLevel", "eventual")
-			opts.queryValues.Add(odataSearchParamKey, searchParam)
-		}
-	}
-)
-
-// getQueryOptions allow to optionally pass OData query options
-// see https://docs.microsoft.com/en-us/graph/query-parameters
-type getQueryOptions struct {
-	ctx         context.Context
-	queryValues url.Values
-}
-
-func (g *getQueryOptions) Context() context.Context {
-	if g.ctx == nil {
-		return context.Background()
-	}
-	return g.ctx
-}
-
-func (g getQueryOptions) Values() url.Values {
-	return g.queryValues
-}
-
-func (g getQueryOptions) Headers() http.Header {
-	return http.Header{}
-}
-
-func compileGetQueryOptions(options []GetQueryOption) *getQueryOptions {
-	var opts = &getQueryOptions{
-		queryValues: url.Values{},
-	}
-	for idx := range options {
-		options[idx](opts)
-	}
-
-	return opts
-}
-
-// listQueryOptions allow to optionally pass OData query options
-// see https://docs.microsoft.com/en-us/graph/query-parameters
-type listQueryOptions struct {
-	getQueryOptions
-	queryHeaders http.Header
-}
-
-func (g *listQueryOptions) Context() context.Context {
-	if g.ctx == nil {
-		return context.Background()
-	}
-	return g.ctx
-}
-
-func (g listQueryOptions) Values() url.Values {
-	return g.queryValues
-}
-
-func (g listQueryOptions) Headers() http.Header {
-	return g.queryHeaders
-}
-
-func compileListQueryOptions(options []ListQueryOption) *listQueryOptions {
-	var opts = &listQueryOptions{
-		getQueryOptions: getQueryOptions{
-			queryValues: url.Values{},
-		},
-		queryHeaders: http.Header{},
-	}
-	for idx := range options {
-		options[idx](opts)
-	}
-
-	return opts
-}
-
 // ListGroups returns a list of all groups
 // Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
@@ -470,7 +282,7 @@ func (g *GraphClient) GetGroup(groupID string, opts ...GetQueryOption) (Group, e
 
 // CreateUser creates a new user given a user object and returns and updated object
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-post-users
-func (g *GraphClient) CreateUser(userInput *User) (User, error) {
+func (g *GraphClient) CreateUser(userInput *User, opts ...CreateQueryOption) (User, error) {
 	user := User{graphClient: g}
 	bodyBytes, err := json.Marshal(userInput)
 	if err != nil {
@@ -478,27 +290,9 @@ func (g *GraphClient) CreateUser(userInput *User) (User, error) {
 	}
 
 	reader := bytes.NewReader(bodyBytes)
-	opts := compileEmptyQueryOptions()
-	err = g.makePOSTAPICall("/users", opts, reader, &user)
+	err = g.makePOSTAPICall("/users", compileCreateQueryOptions(opts), reader, &user)
 
 	return user, err
-}
-
-// Patches a user given a user object. Note, only set the fields that should be changed
-// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-update
-func (g *GraphClient) UpdateUser(identifier string, userInput *User) error {
-	resource := fmt.Sprintf("/users/%v", identifier)
-
-	bodyBytes, err := json.Marshal(userInput)
-	if err != nil {
-		return err
-	}
-
-	reader := bytes.NewReader(bodyBytes)
-	opts := compileEmptyQueryOptions()
-	err = g.makePatchAPICall(resource, opts, reader, nil)
-
-	return err
 }
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library.
@@ -541,14 +335,4 @@ func (g *GraphClient) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("can't get Token: %v", err)
 	}
 	return nil
-}
-
-func compileEmptyQueryOptions() *listQueryOptions {
-	var opts = &listQueryOptions{
-		getQueryOptions: getQueryOptions{
-			queryValues: url.Values{},
-		},
-		queryHeaders: http.Header{},
-	}
-	return opts
 }

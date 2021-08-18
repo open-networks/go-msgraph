@@ -1,6 +1,8 @@
 package msgraph
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -141,6 +143,28 @@ func (u User) GetShortName() string {
 // GetFullName returns the full name in that format: <firstname> <lastname>
 func (u User) GetFullName() string {
 	return fmt.Sprintf("%v %v", u.GivenName, u.Surname)
+}
+
+// UpdateUser patches this user object. Note, only set the fields that should be changed.
+// Furthermore, the user cannot be disabled (field AccountEnabled) this way, because the
+// default value of a boolean is false - and hence will not be posted via json.
+//
+// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-update
+func (u User) UpdateUser(userInput User, opts ...UpdateQueryOption) error {
+	if u.graphClient == nil {
+		return ErrNotGraphClientSourced
+	}
+	resource := fmt.Sprintf("/users/%v", u.ID)
+
+	bodyBytes, err := json.Marshal(userInput)
+	if err != nil {
+		return err
+	}
+
+	reader := bytes.NewReader(bodyBytes)
+	// TODO: check return body, maybe there is some potential success or error message hidden in it?
+	err = u.graphClient.makePATCHAPICall(resource, compileUpdateQueryOptions(opts), reader, nil)
+	return err
 }
 
 // PrettySimpleString returns the User-instance simply formatted for logging purposes: {FullName (email) (activePhone)}
