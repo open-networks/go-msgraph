@@ -18,7 +18,7 @@ type ListQueryOption func(opts *listQueryOptions)
 
 type CreateQueryOption func(opts *createQueryOptions)
 
-type PatchQueryOption func(opts *patchQueryOptions)
+type UpdateQueryOption func(opts *updateQueryOptions)
 
 var (
 	// GetWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
@@ -71,9 +71,9 @@ var (
 		}
 	}
 
-	// PatchWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
-	PatchWithContext = func(ctx context.Context) PatchQueryOption {
-		return func(opts *patchQueryOptions) {
+	// UpdateWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
+	UpdateWithContext = func(ctx context.Context) UpdateQueryOption {
+		return func(opts *updateQueryOptions) {
 			opts.ctx = ctx
 		}
 	}
@@ -173,20 +173,20 @@ func compileCreateQueryOptions(options []CreateQueryOption) *createQueryOptions 
 	return opts
 }
 
-// patchQueryOptions allows to add a context to the request
-type patchQueryOptions struct {
+// updateQueryOptions allows to add a context to the request
+type updateQueryOptions struct {
 	getQueryOptions
 }
 
-func (g *patchQueryOptions) Context() context.Context {
+func (g *updateQueryOptions) Context() context.Context {
 	if g.ctx == nil {
 		return context.Background()
 	}
 	return g.ctx
 }
 
-func compilePatchQueryOptions(options []PatchQueryOption) *patchQueryOptions {
-	var opts = &patchQueryOptions{
+func compileUpdateQueryOptions(options []UpdateQueryOption) *updateQueryOptions {
+	var opts = &updateQueryOptions{
 		getQueryOptions: getQueryOptions{
 			queryValues: url.Values{},
 		},

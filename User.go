@@ -150,7 +150,7 @@ func (u User) GetFullName() string {
 // default value of a boolean is false - and hence will not be posted via json.
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-update
-func (u User) UpdateUser(userInput User, opts ...PatchQueryOption) error {
+func (u User) UpdateUser(userInput User, opts ...UpdateQueryOption) error {
 	if u.graphClient == nil {
 		return ErrNotGraphClientSourced
 	}
@@ -163,7 +163,7 @@ func (u User) UpdateUser(userInput User, opts ...PatchQueryOption) error {
 
 	reader := bytes.NewReader(bodyBytes)
 	// TODO: check return body, maybe there is some potential success or error message hidden in it?
-	err = u.graphClient.makePATCHAPICall(resource, compilePatchQueryOptions(opts), reader, nil)
+	err = u.graphClient.makePATCHAPICall(resource, compileUpdateQueryOptions(opts), reader, nil)
 	return err
 }
 
