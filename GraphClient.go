@@ -297,7 +297,7 @@ func (g *GraphClient) CreateUser(userInput *User, opts ...CreateQueryOption) (Us
 
 // Patches a user given a user object. Note, only set the fields that should be changed
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-update
-func (g *GraphClient) UpdateUser(identifier string, userInput *User, opts ...PatchQueryOption) error {
+func (g *GraphClient) PatchUser(identifier string, userInput *User, opts ...PatchQueryOption) error {
 	resource := fmt.Sprintf("/users/%v", identifier)
 
 	bodyBytes, err := json.Marshal(userInput)
