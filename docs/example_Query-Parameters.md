@@ -45,3 +45,4 @@ users, err := graphClient.ListUsers(
 	msgraph.ListWithSearch(fmt.Sprintf("displayName:%s", searchUser)),
 	msgraph.ListWithContext(ctx.Background()),
 )
+````
