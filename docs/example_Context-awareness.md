@@ -26,7 +26,9 @@ user, err := graphClient.GetUser("dumpty@contoso.com", msgraph.GetWithContext(ct
 // example for List-func:
 users, err := graphClient.ListUsers(msgraph.ListWithContext(ctx))
 // example for Create-func:
-user, err := graphClient.CreateUser(msgraph.CreateWithContext(ctx))
+user, err := graphClient.CreateUser(msgrpah.User: {DisplayName : "New User"}, msgraph.CreateWithContext(ctx))
+// example for update-func:
+err = := user.UpdateUser(msgraph.User{DisplayName: "Even newer User"}, msgraph.UpdateWithContext(ctx))
 ````
 
 Note: the use of a context is optional. If no context is given, the context `context.Background()` will automatically be used for all API-calls.
