@@ -132,17 +132,17 @@ func (g *GraphClient) refreshToken() error {
 	return err
 }
 
-// makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
+// makeGETAPICall performs an API-Call to the msgraph API.
 func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams, v interface{}) error {
 	return g.makeAPICall(apiCall, http.MethodGet, reqParams, nil, v)
 }
 
-// makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
+// makeGETAPICall performs an API-Call to the msgraph API.
 func (g *GraphClient) makePOSTAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
 	return g.makeAPICall(apiCall, http.MethodPost, reqParams, body, v)
 }
 
-// makePATCHAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
+// makePATCHAPICall performs an API-Call to the msgraph API.
 func (g *GraphClient) makePATCHAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
 	return g.makeAPICall(apiCall, http.MethodPatch, reqParams, body, v)
 }
