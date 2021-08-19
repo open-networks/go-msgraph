@@ -282,7 +282,7 @@ func (g *GraphClient) GetGroup(groupID string, opts ...GetQueryOption) (Group, e
 
 // CreateUser creates a new user given a user object and returns and updated object
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-post-users
-func (g *GraphClient) CreateUser(userInput *User, opts ...CreateQueryOption) (User, error) {
+func (g *GraphClient) CreateUser(userInput User, opts ...CreateQueryOption) (User, error) {
 	user := User{graphClient: g}
 	bodyBytes, err := json.Marshal(userInput)
 	if err != nil {
