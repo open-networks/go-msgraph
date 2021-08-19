@@ -34,6 +34,7 @@ jobs:
         MSGraphTenantID: ${{ secrets.MSGraphTenantID }}
         MSGraphApplicationID: ${{ secrets.MSGraphApplicationID }}
         MSGraphClientSecret: ${{ secrets.MSGraphClientSecret }}
+        MSGraphDomainNameForCreateTests: ${{ secrets.MSGraphDomainNameForCreateTests }}
         MSGraphExistingGroupDisplayName: ${{ secrets.MSGraphExistingGroupDisplayName }}
         MSGraphExistingUserPrincipalInGroup: ${{ secrets.MSGraphExistingUserPrincipalInGroup }}
         MSGraphExistingCalendarsOfUser: ${{ secrets.MSGraphExistingCalendarsOfUser }}
