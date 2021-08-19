@@ -147,6 +147,11 @@ func (g *GraphClient) makePATCHAPICall(apiCall string, reqParams getRequestParam
 	return g.makeAPICall(apiCall, http.MethodPatch, reqParams, body, v)
 }
 
+// makeDELETEAPICall performs an API-Call to the msgraph API.
+func (g *GraphClient) makeDELETEAPICall(apiCall string, reqParams getRequestParams, v interface{}) error {
+	return g.makeAPICall(apiCall, http.MethodDelete, reqParams, nil, v)
+}
+
 // makeAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls.
 //
 // Parameter httpMethod may be http.MethodGet, http.MethodPost or http.MethodPatch
@@ -223,6 +228,9 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 		return fmt.Errorf("HTTP response read error: %v of http.Request: %v", err, req.URL)
 	}
 
+	if req.Method == http.MethodDelete { // no content returned when http DELETE is used, e.g. User.DeleteUser()
+		return nil
+	}
 	return json.Unmarshal(body, &v) // return the error of the json unmarshal
 }
 

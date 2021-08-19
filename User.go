@@ -167,6 +167,20 @@ func (u User) UpdateUser(userInput User, opts ...UpdateQueryOption) error {
 	return err
 }
 
+// DeleteUser deletes this user instance at the Microsoft Azure AD. Use with caution.
+//
+// Reference: https://docs.microsoft.com/en-us/graph/api/user-delete
+func (u User) DeleteUser(opts ...DeleteQueryOption) error {
+	if u.graphClient == nil {
+		return ErrNotGraphClientSourced
+	}
+	resource := fmt.Sprintf("/users/%v", u.ID)
+
+	// TODO: check return body, maybe there is some potential success or error message hidden in it?
+	err := u.graphClient.makeDELETEAPICall(resource, compileDeleteQueryOptions(opts), nil)
+	return err
+}
+
 // PrettySimpleString returns the User-instance simply formatted for logging purposes: {FullName (email) (activePhone)}
 func (u User) PrettySimpleString() string {
 	return fmt.Sprintf("{ %v (%v) (%v) }", u.GetFullName(), u.Mail, u.GetActivePhone())
