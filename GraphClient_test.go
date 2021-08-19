@@ -595,12 +595,27 @@ func TestGraphClient_CreateAndDeleteUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// test CreateUser
 			got, err := tt.g.CreateUser(tt.want)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GraphClient.CreateUser() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			fmt.Printf("Got: %v\n", got)
+			fmt.Printf("GraphClient.CreateUser() result: %v\n", got)
+			// test DisableAccount
+			err = got.DisableAccount()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("User.DisableAccount() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			// get user again to compare AccountEnabled field
+			got, err = tt.g.GetUser(got.ID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GraphClient.GetUser() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got.AccountEnabled == true {
+				t.Errorf("User.DisableAccount() did not work, AccountEnabled is still true")
+			}
+			// Delete user again
 			err = got.DeleteUser()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("User.DeleteUser() error = %v, wantErr %v", err, tt.wantErr)

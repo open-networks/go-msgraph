@@ -228,7 +228,8 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 		return fmt.Errorf("HTTP response read error: %v of http.Request: %v", err, req.URL)
 	}
 
-	if req.Method == http.MethodDelete { // no content returned when http DELETE is used, e.g. User.DeleteUser()
+	// no content returned when http PATCH or DELETE is used, e.g. User.DeleteUser()
+	if req.Method == http.MethodDelete || req.Method == http.MethodPatch {
 		return nil
 	}
 	return json.Unmarshal(body, &v) // return the error of the json unmarshal

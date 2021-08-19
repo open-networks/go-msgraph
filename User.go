@@ -146,8 +146,10 @@ func (u User) GetFullName() string {
 }
 
 // UpdateUser patches this user object. Note, only set the fields that should be changed.
-// Furthermore, the user cannot be disabled (field AccountEnabled) this way, because the
-// default value of a boolean is false - and hence will not be posted via json.
+//
+// IMPORTANT: the user cannot be disabled (field AccountEnabled) this way, because the
+// default value of a boolean is false - and hence will not be posted via json - omitempty
+// is used. user func user.DisableAccount() instead.
 //
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-update
 func (u User) UpdateUser(userInput User, opts ...UpdateQueryOption) error {
@@ -162,7 +164,32 @@ func (u User) UpdateUser(userInput User, opts ...UpdateQueryOption) error {
 	}
 
 	reader := bytes.NewReader(bodyBytes)
-	// TODO: check return body, maybe there is some potential success or error message hidden in it?
+	// Hint: API-call body does not return any data / no json object.
+	err = u.graphClient.makePATCHAPICall(resource, compileUpdateQueryOptions(opts), reader, nil)
+	return err
+}
+
+// DisableAccount disables the User-Account, hence sets the AccountEnabled-field to false.
+// This function must be used instead of user.UpdateUser, because the AccountEnabled-field
+// with json "omitempty" will never be sent when false. Without omitempty, the user account would
+// always accidentially disabled upon an update of e.g. only "DisplayName"
+//
+// Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-update
+func (u User) DisableAccount(opts ...UpdateQueryOption) error {
+	if u.graphClient == nil {
+		return ErrNotGraphClientSourced
+	}
+	resource := fmt.Sprintf("/users/%v", u.ID)
+
+	bodyBytes, err := json.Marshal(struct {
+		AccountEnabled bool `json:"accountEnabled"`
+	}{AccountEnabled: false})
+	if err != nil {
+		return err
+	}
+
+	reader := bytes.NewReader(bodyBytes)
+	// Hint: API-call body does not return any data / no json object.
 	err = u.graphClient.makePATCHAPICall(resource, compileUpdateQueryOptions(opts), reader, nil)
 	return err
 }
