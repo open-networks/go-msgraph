@@ -41,7 +41,7 @@ type PasswordProfile struct {
 	Password                             string `json:"password,omitempty"`
 }
 
-func (u *User) String() string {
+func (u User) String() string {
 	return fmt.Sprintf("User(ID: \"%v\", BusinessPhones: \"%v\", DisplayName: \"%v\", GivenName: \"%v\", "+
 		"Mail: \"%v\", MobilePhone: \"%v\", PreferredLanguage: \"%v\", Surname: \"%v\", UserPrincipalName: \"%v\", "+
 		"ActivePhone: \"%v\", DirectAPIConnection: %v)",
