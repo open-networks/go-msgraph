@@ -132,19 +132,24 @@ func (g *GraphClient) refreshToken() error {
 	return err
 }
 
-// makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
+// makeGETAPICall performs an API-Call to the msgraph API.
 func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams, v interface{}) error {
 	return g.makeAPICall(apiCall, http.MethodGet, reqParams, nil, v)
 }
 
-// makeGETAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
+// makeGETAPICall performs an API-Call to the msgraph API.
 func (g *GraphClient) makePOSTAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
 	return g.makeAPICall(apiCall, http.MethodPost, reqParams, body, v)
 }
 
-// makePATCHAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls
+// makePATCHAPICall performs an API-Call to the msgraph API.
 func (g *GraphClient) makePATCHAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
 	return g.makeAPICall(apiCall, http.MethodPatch, reqParams, body, v)
+}
+
+// makeDELETEAPICall performs an API-Call to the msgraph API.
+func (g *GraphClient) makeDELETEAPICall(apiCall string, reqParams getRequestParams, v interface{}) error {
+	return g.makeAPICall(apiCall, http.MethodDelete, reqParams, nil, v)
 }
 
 // makeAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls.
@@ -223,6 +228,10 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 		return fmt.Errorf("HTTP response read error: %v of http.Request: %v", err, req.URL)
 	}
 
+	// no content returned when http PATCH or DELETE is used, e.g. User.DeleteUser()
+	if req.Method == http.MethodDelete || req.Method == http.MethodPatch {
+		return nil
+	}
 	return json.Unmarshal(body, &v) // return the error of the json unmarshal
 }
 
@@ -282,7 +291,7 @@ func (g *GraphClient) GetGroup(groupID string, opts ...GetQueryOption) (Group, e
 
 // CreateUser creates a new user given a user object and returns and updated object
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user-post-users
-func (g *GraphClient) CreateUser(userInput *User, opts ...CreateQueryOption) (User, error) {
+func (g *GraphClient) CreateUser(userInput User, opts ...CreateQueryOption) (User, error) {
 	user := User{graphClient: g}
 	bodyBytes, err := json.Marshal(userInput)
 	if err != nil {

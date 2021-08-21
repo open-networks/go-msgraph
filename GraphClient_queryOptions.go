@@ -20,6 +20,8 @@ type CreateQueryOption func(opts *createQueryOptions)
 
 type UpdateQueryOption func(opts *updateQueryOptions)
 
+type DeleteQueryOption func(opts *deleteQueryOptions)
+
 var (
 	// GetWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
 	GetWithContext = func(ctx context.Context) GetQueryOption {
@@ -74,6 +76,12 @@ var (
 	// UpdateWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
 	UpdateWithContext = func(ctx context.Context) UpdateQueryOption {
 		return func(opts *updateQueryOptions) {
+			opts.ctx = ctx
+		}
+	}
+	// DeleteWithContext - add a context.Context to the HTTP request e.g. to allow cancellation
+	DeleteWithContext = func(ctx context.Context) DeleteQueryOption {
+		return func(opts *deleteQueryOptions) {
 			opts.ctx = ctx
 		}
 	}
@@ -187,6 +195,31 @@ func (g *updateQueryOptions) Context() context.Context {
 
 func compileUpdateQueryOptions(options []UpdateQueryOption) *updateQueryOptions {
 	var opts = &updateQueryOptions{
+		getQueryOptions: getQueryOptions{
+			queryValues: url.Values{},
+		},
+	}
+	for idx := range options {
+		options[idx](opts)
+	}
+
+	return opts
+}
+
+// deleteQueryOptions allows to add a context to the request
+type deleteQueryOptions struct {
+	getQueryOptions
+}
+
+func (g *deleteQueryOptions) Context() context.Context {
+	if g.ctx == nil {
+		return context.Background()
+	}
+	return g.ctx
+}
+
+func compileDeleteQueryOptions(options []DeleteQueryOption) *deleteQueryOptions {
+	var opts = &deleteQueryOptions{
 		getQueryOptions: getQueryOptions{
 			queryValues: url.Values{},
 		},

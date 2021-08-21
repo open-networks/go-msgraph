@@ -1,6 +1,7 @@
 package msgraph
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -133,4 +134,27 @@ func TestUser_ListCalendarView(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUser_String(t *testing.T) {
+	u := GetTestUser(t)
+	tt := struct {
+		name string
+		u    *User
+		want string
+	}{
+		name: "Test user func String",
+		u:    &u,
+		want: fmt.Sprintf("User(ID: \"%v\", BusinessPhones: \"%v\", DisplayName: \"%v\", GivenName: \"%v\", "+
+			"Mail: \"%v\", MobilePhone: \"%v\", PreferredLanguage: \"%v\", Surname: \"%v\", UserPrincipalName: \"%v\", "+
+			"ActivePhone: \"%v\", DirectAPIConnection: %v)",
+			u.ID, u.BusinessPhones, u.DisplayName, u.GivenName, u.Mail, u.MobilePhone, u.PreferredLanguage, u.Surname,
+			u.UserPrincipalName, u.activePhone, u.graphClient != nil),
+	}
+
+	t.Run(tt.name, func(t *testing.T) {
+		if got := tt.u.String(); got != tt.want {
+			t.Errorf("User.String() = %v, want %v", got, tt.want)
+		}
+	})
 }

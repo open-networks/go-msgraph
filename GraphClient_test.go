@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/url"
 	"os"
 	"reflect"
@@ -33,6 +34,8 @@ var (
 	msGraphExistingCalendarsOfUser []string
 	// the number of expected results when searching for the msGraphExistingGroupDisplayName with $search or $filter
 	msGraphExistingGroupDisplayNameNumRes uint64
+	// a domain-name for unit tests to create a user or other objects, e.g. contoso.com - omit the @
+	msGraphDomainNameForCreateTests string
 	// the graphclient used to perform all tests
 	graphClient *GraphClient
 	// marker if the calendar tests should be skipped - set if msGraphExistingCalendarsOfUser is empty
@@ -53,6 +56,7 @@ func TestMain(m *testing.M) {
 	msGraphClientSecret = getEnvOrPanic("MSGraphClientSecret")
 	msGraphExistingGroupDisplayName = getEnvOrPanic("MSGraphExistingGroupDisplayName")
 	msGraphExistingUserPrincipalInGroup = getEnvOrPanic("MSGraphExistingUserPrincipalInGroup")
+	msGraphDomainNameForCreateTests = getEnvOrPanic("MSGraphDomainNameForCreateTests")
 
 	if msGraphAzureADAuthEndpoint = os.Getenv("MSGraphAzureADAuthEndpoint"); msGraphAzureADAuthEndpoint == "" {
 		msGraphAzureADAuthEndpoint = AzureADAuthEndpointGlobal
@@ -76,7 +80,18 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Cannot initialize a new GraphClient, error: %v", err))
 	}
 
+	rand.Seed(time.Now().UnixNano())
+
 	os.Exit(m.Run())
+}
+
+func randomString(n int) string {
+	var runes = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = runes[rand.Intn(len(runes))]
+	}
+	return string(b)
 }
 
 func TestNewGraphClient(t *testing.T) {
@@ -552,6 +567,58 @@ func TestGraphClient_GetGroup(t *testing.T) {
 			}
 			if !(got.DisplayName == tt.want.DisplayName) {
 				t.Errorf("GraphClient.GetGroup() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGraphClient_CreateAndDeleteUser(t *testing.T) {
+	var rndstring = randomString(32)
+	tests := []struct {
+		name    string
+		g       *GraphClient
+		want    User
+		wantErr bool
+	}{
+		{
+			name: "Create new User",
+			g:    graphClient,
+			want: User{
+				AccountEnabled:    true,
+				DisplayName:       "go-msgraph unit-test generated user " + time.Now().Format("2006-01-02") + " - random " + rndstring,
+				MailNickname:      "go-msgraph.unit-test.generated." + rndstring,
+				UserPrincipalName: "go-msgraph.unit-test.generated." + rndstring + "@" + msGraphDomainNameForCreateTests,
+				PasswordProfile:   PasswordProfile{Password: randomString(32)},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// test CreateUser
+			got, err := tt.g.CreateUser(tt.want)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GraphClient.CreateUser() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			fmt.Printf("GraphClient.CreateUser() result: %v\n", got)
+			// test DisableAccount
+			err = got.DisableAccount()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("User.DisableAccount() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			// get user again to compare AccountEnabled field
+			got, err = tt.g.GetUser(got.ID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GraphClient.GetUser() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got.AccountEnabled == true {
+				t.Errorf("User.DisableAccount() did not work, AccountEnabled is still true")
+			}
+			// Delete user again
+			err = got.DeleteUser()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("User.DeleteUser() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
