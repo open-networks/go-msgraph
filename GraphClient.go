@@ -137,7 +137,12 @@ func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams,
 	return g.makeAPICall(apiCall, http.MethodGet, reqParams, nil, v)
 }
 
-// makeGETAPICall performs an API-Call to the msgraph API.
+// makeGETAPICALLWithToken performs an API-Call to the msgraph API
+func (g *GraphClient) makeGETAPICALLWithToken(apiCall string, reqParams getRequestParams, v interface{}, tokenUrl string) error {
+	return g.makeSkipTokenApiCall(apiCall, http.MethodGet, reqParams, nil, v, tokenUrl)
+}
+
+// makePOSTAPICall performs an API-Call to the msgraph API.
 func (g *GraphClient) makePOSTAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
 	return g.makeAPICall(apiCall, http.MethodPost, reqParams, body, v)
 }
@@ -203,6 +208,37 @@ func (g *GraphClient) makeAPICall(apiCall string, httpMethod string, reqParams g
 	return g.performRequest(req, v)
 }
 
+// makeSkipTokenAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls.
+//
+// Gets the results of the page specified by the skip token
+func (g *GraphClient) makeSkipTokenApiCall(apiCall string, httpMethod string, reqParams getRequestParams, body io.Reader, v interface{}, skipToken string) error {
+	g.makeSureURLsAreSet()
+	g.apiCall.Lock()
+	defer g.apiCall.Unlock() // unlock when the func returns
+	// Check token
+	if g.token.WantsToBeRefreshed() { // Token not valid anymore?
+		err := g.refreshToken()
+		if err != nil {
+			return err
+		}
+	}
+
+	req, err := http.NewRequestWithContext(reqParams.Context(), httpMethod, skipToken, body)
+	if err != nil {
+		return fmt.Errorf("HTTP request error: %v", err)
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", g.token.GetAccessToken())
+
+	for key, vals := range reqParams.Headers() {
+		for idx := range vals {
+			req.Header.Add(key, vals[idx])
+		}
+	}
+
+	return g.performRequest(req, v)
+}
+
 // performRequest performs a pre-prepared http.Request and does the proper error-handling for it.
 // does a json.Unmarshal into the v interface{} and returns the error of it if everything went well so far.
 func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
@@ -241,12 +277,29 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list
 func (g *GraphClient) ListUsers(opts ...ListQueryOption) (Users, error) {
 	resource := "/users"
-	var marsh struct {
-		Users Users `json:"value"`
+	var usr struct {
+		Users     Users  `json:"value"`
+		SkipToken string `json:"@odata.nextLink"`
 	}
-	err := g.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
-	marsh.Users.setGraphClient(g)
-	return marsh.Users, err
+
+	var users Users
+
+	reqParams := compileListQueryOptions(opts)
+
+	err := g.makeGETAPICall(resource, reqParams, &usr)
+	users = append(users, usr.Users...)
+
+	for usr.SkipToken != "" {
+		tempToken := usr.SkipToken
+		err = g.makeGETAPICALLWithToken(resource, reqParams, &usr, usr.SkipToken)
+		users = append(users, usr.Users...)
+		if tempToken == usr.SkipToken {
+			break
+		}
+	}
+
+	users.setGraphClient(g)
+	return users, err
 }
 
 // ListGroups returns a list of all groups
@@ -255,15 +308,28 @@ func (g *GraphClient) ListUsers(opts ...ListQueryOption) (Users, error) {
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list
 func (g *GraphClient) ListGroups(opts ...ListQueryOption) (Groups, error) {
 	resource := "/groups"
-
-	var reqParams = compileListQueryOptions(opts)
-
-	var marsh struct {
-		Groups Groups `json:"value"`
+	var grp struct {
+		Groups    Groups `json:"value"`
+		SkipToken string `json:"@odata.nextLink"`
 	}
-	err := g.makeGETAPICall(resource, reqParams, &marsh)
-	marsh.Groups.setGraphClient(g)
-	return marsh.Groups, err
+
+	var groups Groups
+
+	reqParams := compileListQueryOptions(opts)
+
+	err := g.makeGETAPICall(resource, reqParams, &grp)
+	groups = append(groups, grp.Groups...)
+
+	for grp.SkipToken != "" {
+		tempToken := grp.SkipToken
+		err = g.makeGETAPICALLWithToken(resource, reqParams, &grp, grp.SkipToken)
+		groups = append(groups, grp.Groups...)
+		if tempToken == grp.SkipToken {
+			break
+		}
+	}
+	groups.setGraphClient(g)
+	return groups, err
 }
 
 // GetUser returns the user object associated to the given user identified by either
