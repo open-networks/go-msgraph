@@ -53,6 +53,13 @@ func TestUser_ListCalendars(t *testing.T) {
 	if skipCalendarTests {
 		t.Skip("Skipping due to missing 'MSGraphExistingCalendarsOfUser' value")
 	}
+	// testing for ErrNotGraphClientSourced
+	notGraphClientSourcedUser := User{ID: "none"}
+	_, err := notGraphClientSourcedUser.ListCalendars()
+	if err != ErrNotGraphClientSourced {
+		t.Errorf("Expected error \"ErrNotGraphClientSourced\", but got: %v", err)
+	}
+	// continue with normal tests
 	userToTest := GetTestUser(t)
 
 	var wantedCalendars []Calendar
@@ -160,6 +167,14 @@ func TestUser_String(t *testing.T) {
 }
 
 func TestUser_UpdateUser(t *testing.T) {
+	// testing for ErrNotGraphClientSourced
+	notGraphClientSourcedUser := User{ID: "none"}
+	err := notGraphClientSourcedUser.UpdateUser(User{})
+	if err != ErrNotGraphClientSourced {
+		t.Errorf("Expected error \"ErrNotGraphClientSourced\", but got: %v", err)
+	}
+
+	// continue with normal tests
 	testuser := createUnitTestUser(t)
 
 	targetedCompanyName := "go-msgraph unit test suite UpdateUser" + randomString(25)
@@ -176,5 +191,34 @@ func TestUser_UpdateUser(t *testing.T) {
 	err = testuser.DeleteUser()
 	if err != nil {
 		t.Errorf("Could not User.DeleteUser() (for %v) after User.UpdateUser tests: %v", testuser, err)
+	}
+}
+
+func TestUser_GetShortName(t *testing.T) {
+	// test a normal case
+	testuser := User{UserPrincipalName: "dumpty@contoso.com"}
+	if testuser.GetShortName() != "dumpty" {
+		t.Errorf("user.GetShortName() should return \"dumpty\", but returns: %v", testuser.GetShortName())
+	}
+	// test a case that actually should never happen... but we all know murphy
+	testuser = User{UserPrincipalName: "alice"}
+	if testuser.GetShortName() != "alice" {
+		t.Errorf("user.GetShortName() should return \"alice\", but returns: %v", testuser.GetShortName())
+	}
+}
+
+func TestUser_GetFullName(t *testing.T) {
+	testuser := User{GivenName: "Bob", Surname: "Rabbit"}
+	wanted := fmt.Sprintf("%v %v", testuser.GivenName, testuser.Surname)
+	if testuser.GetFullName() != wanted {
+		t.Errorf("user.GetFullName() should return \"%v\", but returns: \"%v\"", wanted, testuser.GetFullName())
+	}
+}
+
+func TestUser_PrettySimpleString(t *testing.T) {
+	testuser := User{GivenName: "Bob", Surname: "Rabbit", Mail: "bob.rabbit@contoso.com", MobilePhone: "+1 23456789"}
+	wanted := fmt.Sprintf("{ %v (%v) (%v) }", testuser.GetFullName(), testuser.Mail, testuser.GetActivePhone())
+	if testuser.PrettySimpleString() != wanted {
+		t.Errorf("user.GetFullName() should return \"%v\", but returns: \"%v\"", wanted, testuser.PrettySimpleString())
 	}
 }
