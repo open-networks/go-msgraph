@@ -211,6 +211,6 @@ func TestUser_GetFullName(t *testing.T) {
 	testuser := User{GivenName: "Bob", Surname: "Rabbit"}
 	wanted := fmt.Sprintf("%v %v", testuser.GivenName, testuser.Surname)
 	if testuser.GetFullName() != wanted {
-		t.Errorf("user.GetFullName() should return \"%v\", but returns: \"%v\"", wanted, testuser.GetShortName())
+		t.Errorf("user.GetFullName() should return \"%v\", but returns: \"%v\"", wanted, testuser.GetFullName())
 	}
 }
