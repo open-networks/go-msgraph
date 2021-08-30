@@ -145,6 +145,11 @@ func (u User) GetFullName() string {
 	return fmt.Sprintf("%v %v", u.GivenName, u.Surname)
 }
 
+// PrettySimpleString returns the User-instance simply formatted for logging purposes: {FullName (email) (activePhone)}
+func (u User) PrettySimpleString() string {
+	return fmt.Sprintf("{ %v (%v) (%v) }", u.GetFullName(), u.Mail, u.GetActivePhone())
+}
+
 // UpdateUser patches this user object. Note, only set the fields that should be changed.
 //
 // IMPORTANT: the user cannot be disabled (field AccountEnabled) this way, because the
@@ -206,11 +211,6 @@ func (u User) DeleteUser(opts ...DeleteQueryOption) error {
 	// TODO: check return body, maybe there is some potential success or error message hidden in it?
 	err := u.graphClient.makeDELETEAPICall(resource, compileDeleteQueryOptions(opts), nil)
 	return err
-}
-
-// PrettySimpleString returns the User-instance simply formatted for logging purposes: {FullName (email) (activePhone)}
-func (u User) PrettySimpleString() string {
-	return fmt.Sprintf("{ %v (%v) (%v) }", u.GetFullName(), u.Mail, u.GetActivePhone())
 }
 
 // Equal returns wether the user equals the other User by comparing every property

@@ -214,3 +214,11 @@ func TestUser_GetFullName(t *testing.T) {
 		t.Errorf("user.GetFullName() should return \"%v\", but returns: \"%v\"", wanted, testuser.GetFullName())
 	}
 }
+
+func TestUser_PrettySimpleString(t *testing.T) {
+	testuser := User{GivenName: "Bob", Surname: "Rabbit", Mail: "bob.rabbit@contoso.com", MobilePhone: "+1 23456789"}
+	wanted := fmt.Sprintf("{ %v (%v) (%v) }", testuser.GetFullName(), testuser.Mail, testuser.GetActivePhone())
+	if testuser.PrettySimpleString() != wanted {
+		t.Errorf("user.GetFullName() should return \"%v\", but returns: \"%v\"", wanted, testuser.PrettySimpleString())
+	}
+}
