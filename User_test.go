@@ -53,6 +53,13 @@ func TestUser_ListCalendars(t *testing.T) {
 	if skipCalendarTests {
 		t.Skip("Skipping due to missing 'MSGraphExistingCalendarsOfUser' value")
 	}
+	// testing for ErrNotGraphClientSourced
+	notGraphClientSourcedUser := User{ID: "none"}
+	_, err := notGraphClientSourcedUser.ListCalendars()
+	if err != ErrNotGraphClientSourced {
+		t.Errorf("Expected error \"ErrNotGraphClientSourced\", but got: %v", err)
+	}
+	// continue with normal tests
 	userToTest := GetTestUser(t)
 
 	var wantedCalendars []Calendar
@@ -160,6 +167,14 @@ func TestUser_String(t *testing.T) {
 }
 
 func TestUser_UpdateUser(t *testing.T) {
+	// testing for ErrNotGraphClientSourced
+	notGraphClientSourcedUser := User{ID: "none"}
+	err := notGraphClientSourcedUser.UpdateUser(User{})
+	if err != ErrNotGraphClientSourced {
+		t.Errorf("Expected error \"ErrNotGraphClientSourced\", but got: %v", err)
+	}
+
+	// continue with normal tests
 	testuser := createUnitTestUser(t)
 
 	targetedCompanyName := "go-msgraph unit test suite UpdateUser" + randomString(25)
