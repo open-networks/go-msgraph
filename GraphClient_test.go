@@ -94,6 +94,22 @@ func randomString(n int) string {
 	return string(b)
 }
 
+func createUnitTestUser(t *testing.T) User {
+	t.Helper()
+	rndstring := randomString(32)
+	user, err := graphClient.CreateUser(User{
+		AccountEnabled:    true,
+		DisplayName:       "go-msgraph unit-test generated user " + time.Now().Format("2006-01-02") + " - random " + rndstring,
+		MailNickname:      "go-msgraph.unit-test.generated." + rndstring,
+		UserPrincipalName: "go-msgraph.unit-test.generated." + rndstring + "@" + msGraphDomainNameForCreateTests,
+		PasswordProfile:   PasswordProfile{Password: randomString(32)},
+	})
+	if err != nil {
+		t.Errorf("Cannot create a new User for unit tests: %v", err)
+	}
+	return user
+}
+
 func TestNewGraphClient(t *testing.T) {
 	if msGraphAzureADAuthEndpoint != AzureADAuthEndpointGlobal || msGraphServiceRootEndpoint != ServiceRootEndpointGlobal {
 		t.Skip("Skipping TestNewGraphClient because the endpoint is not the default - global - endpoint")
