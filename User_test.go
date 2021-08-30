@@ -158,3 +158,23 @@ func TestUser_String(t *testing.T) {
 		}
 	})
 }
+
+func TestUser_UpdateUser(t *testing.T) {
+	testuser := createUnitTestUser(t)
+
+	targetedCompanyName := "go-msgraph unit test suite UpdateUser" + randomString(25)
+	testuser.UpdateUser(User{CompanyName: targetedCompanyName})
+	getUser, err := graphClient.GetUser(testuser.ID, GetWithSelect("id,userPrincipalName,displayName,givenName,companyName"))
+	if err != nil {
+		testuser.DeleteUser()
+		t.Errorf("Cannot perform User.UpdateUser, error: %v", err)
+	}
+	if getUser.CompanyName != targetedCompanyName {
+		testuser.DeleteUser()
+		t.Errorf("Performed User.UpdateUser, but CompanyName is still \"%v\" instead of wanted \"%v\"", getUser.CompanyName, targetedCompanyName)
+	}
+	err = testuser.DeleteUser()
+	if err != nil {
+		t.Errorf("Could not User.DeleteUser() (for %v) after User.UpdateUser tests: %v", testuser, err)
+	}
+}
