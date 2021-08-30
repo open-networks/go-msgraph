@@ -194,6 +194,19 @@ func TestUser_UpdateUser(t *testing.T) {
 	}
 }
 
+func TestUser_GetShortName(t *testing.T) {
+	// test a normal case
+	testuser := User{UserPrincipalName: "dumpty@contoso.com"}
+	if testuser.GetShortName() != "dumpty" {
+		t.Errorf("user.GetShortName() should return \"dumpty\", but returns: %v", testuser.GetShortName())
+	}
+	// test a case that actually should never happen... but we all know murphy
+	testuser = User{UserPrincipalName: "alice"}
+	if testuser.GetShortName() != "alice" {
+		t.Errorf("user.GetShortName() should return \"alice\", but returns: %v", testuser.GetShortName())
+	}
+}
+
 func TestUser_GetFullName(t *testing.T) {
 	testuser := User{GivenName: "Bob", Surname: "Rabbit"}
 	wanted := fmt.Sprintf("%v %v", testuser.GivenName, testuser.Surname)

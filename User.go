@@ -137,7 +137,7 @@ func (u User) GetShortName() string {
 	if len(supn) != 2 {
 		return u.UserPrincipalName
 	}
-	return strings.ToUpper(supn[0])
+	return supn[0]
 }
 
 // GetFullName returns the full name in that format: <firstname> <lastname>
