@@ -193,3 +193,11 @@ func TestUser_UpdateUser(t *testing.T) {
 		t.Errorf("Could not User.DeleteUser() (for %v) after User.UpdateUser tests: %v", testuser, err)
 	}
 }
+
+func TestUser_GetFullName(t *testing.T) {
+	testuser := User{GivenName: "Bob", Surname: "Rabbit"}
+	wanted := fmt.Sprintf("%v %v", testuser.GivenName, testuser.Surname)
+	if testuser.GetFullName() != wanted {
+		t.Errorf("user.GetFullName() should return \"%v\", but returns: \"%v\"", wanted, testuser.GetShortName())
+	}
+}
