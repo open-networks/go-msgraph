@@ -923,3 +923,10 @@ func TestGraphClient_UnmarshalJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestGraphClient_String(t *testing.T) {
+	if fmt.Sprintf("GraphClient(TenantID: %v, ApplicationID: %v, ClientSecret: %v...%v, Token validity: [%v - %v])",
+		graphClient.TenantID, graphClient.ApplicationID, graphClient.ClientSecret[0:3], graphClient.ClientSecret[len(graphClient.ClientSecret)-3:], graphClient.token.NotBefore, graphClient.token.ExpiresOn) != graphClient.String() {
+		t.Errorf("GraphClient.String(): String function failed")
+	}
+}
