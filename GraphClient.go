@@ -304,6 +304,32 @@ func (g *GraphClient) CreateUser(userInput User, opts ...CreateQueryOption) (Use
 	return user, err
 }
 
+// SendMail sends a message.
+//
+// See https://docs.microsoft.com/en-us/graph/api/user-sendmail
+func (g *GraphClient) SendMail(userID string, message Message, saveToSentItems bool) error {
+	if g == nil {
+		return ErrNotGraphClientSourced
+	}
+
+	bodyBytes, err := json.Marshal(struct {
+		Message         Message `json:"message,omitempty"`
+		SaveToSentItems bool    `json:"saveToSentItems,omitempty"`
+	}{
+		message,
+		saveToSentItems,
+	})
+	if err != nil {
+		return fmt.Errorf("could not marshal message body: %w", err)
+	}
+
+	reader := bytes.NewReader(bodyBytes)
+
+	resource := fmt.Sprintf("/users/%v/sendMail", userID)
+
+	return g.makePOSTAPICall(resource, compileCreateQueryOptions(nil), reader, nil)
+}
+
 // UnmarshalJSON implements the json unmarshal to be used by the json-library.
 // This method additionally to loading the TenantID, ApplicationID and ClientSecret
 // immediately gets a Token from msgraph (hence initialize this GraphAPI instance)

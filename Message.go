@@ -43,31 +43,4 @@ type Message struct {
 	Extensions                    []Extension                         `json:"extensions,omitempty"`
 	MultiValueExtendedProperties  []MultiValueLegacyExtendedProperty  `json:"multiValueExtendedProperties,omitempty"`
 	SingleValueExtendedProperties []SingleValueLegacyExtendedProperty `json:"singleValueExtendedProperties,omitempty"`
-
-	graphClient *GraphClient
-}
-
-// setGraphClient sets the graphClient instance in this instance and all child-instances (if any)
-func (m *Message) setGraphClient(graphClient *GraphClient) {
-	m.graphClient = graphClient
-
-	for _, bccRecipient := range m.BCCRecipients {
-		bccRecipient.setGraphClient(graphClient)
-	}
-
-	for _, ccRecipient := range m.CCRecipients {
-		ccRecipient.setGraphClient(graphClient)
-	}
-
-	m.From.setGraphClient(graphClient)
-
-	for _, replyToRecipient := range m.ReplyTo {
-		replyToRecipient.setGraphClient(graphClient)
-	}
-
-	m.Sender.setGraphClient(graphClient)
-
-	for _, toRecipient := range m.ToRecipients {
-		toRecipient.setGraphClient(graphClient)
-	}
 }

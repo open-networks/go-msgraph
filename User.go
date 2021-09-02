@@ -105,32 +105,6 @@ func (u User) ListCalendarView(startDateTime, endDateTime time.Time, opts ...Lis
 	return calendarEvents, u.graphClient.makeGETAPICall(resource, reqOpt, &calendarEvents)
 }
 
-// SendMail sends a message.
-//
-// See https://docs.microsoft.com/en-us/graph/api/user-sendmail
-func (u User) SendMail(message Message, saveToSentItems bool) error {
-	if u.graphClient == nil {
-		return ErrNotGraphClientSourced
-	}
-
-	bodyBytes, err := json.Marshal(struct {
-		Message         Message `json:"message,omitempty"`
-		SaveToSentItems bool    `json:"saveToSentItems,omitempty"`
-	}{
-		message,
-		saveToSentItems,
-	})
-	if err != nil {
-		return fmt.Errorf("could not marshal message body: %w", err)
-	}
-
-	reader := bytes.NewReader(bodyBytes)
-
-	resource := fmt.Sprintf("/users/%v/sendMail", u.ID)
-
-	return u.graphClient.makePOSTAPICall(resource, nil, reader, nil)
-}
-
 // getTimeZoneChoices grabs all supported time zones from microsoft for this user.
 // This should actually be the same for every user. Only used internally by this
 // msgraph package.
