@@ -5,6 +5,7 @@ package msgraph
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -271,10 +272,11 @@ func (g *GraphClient) ListGroups(opts ...ListQueryOption) (Groups, error) {
 	return marsh.Groups, err
 }
 
-// ListUserGroups returns a list of all group ids the user is a member of
+// getMemberGroups returns a list of all group ids the user is a member of
 // You can specify the securityGroupsEnabeled parameter to only return security group ids
+//
 // Reference: https://docs.microsoft.com/en-us/graph/api/directoryobject-getmembergroups?view=graph-rest-1.0&tabs=http
-func (g *GraphClient) ListUserGroups(identifier string, securityGroupsEnabeled bool) ([]string, error) {
+func (g *GraphClient) getMemberGroups(identifier string, ctx context.Context, securityGroupsEnabeled bool) ([]string, error) {
 	resource := fmt.Sprintf("/users/%v/getMemberGroups", identifier)
 	var post struct {
 		SecurityEnabledOnly bool `json:"securityEnabledOnly"`
@@ -290,7 +292,8 @@ func (g *GraphClient) ListUserGroups(identifier string, securityGroupsEnabeled b
 	body := bytes.NewReader(bodyBytes)
 	//Query Options not supported
 	reqParams := compileListQueryOptions(nil)
-	
+	reqParams.ctx = ctx
+
 	err = g.makePOSTAPICall(resource, reqParams, body, &marsh)
 	return marsh.Groups, err
 }

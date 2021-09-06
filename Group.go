@@ -59,6 +59,7 @@ func (g Group) ListMembers(opts ...ListQueryOption) (Users, error) {
 
 // Get a list of the group's members. A group can have users, devices, organizational contacts, and other groups as members.
 // This operation is transitive and returns a flat list of all nested members.
+// This method will currently ONLY return User-instances of members
 // Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
 // See https://docs.microsoft.com/en-us/graph/api/group-list-transitivemembers?view=graph-rest-1.0&tabs=http
@@ -74,7 +75,6 @@ func (g Group) ListTransitiveMembers(opts ...ListQueryOption) (Users, error) {
 	marsh.Users.setGraphClient(g.graphClient)
 	return marsh.Users, g.graphClient.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
 }
-
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library
 func (g *Group) UnmarshalJSON(data []byte) error {

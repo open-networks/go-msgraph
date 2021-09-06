@@ -2,6 +2,7 @@ package msgraph
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -143,6 +144,14 @@ func (u User) GetShortName() string {
 // GetFullName returns the full name in that format: <firstname> <lastname>
 func (u User) GetFullName() string {
 	return fmt.Sprintf("%v %v", u.GivenName, u.Surname)
+}
+
+// GetMemberGroupsAsStrings returns a list of all group ids the user is a member of
+// You can specify the securityGroupsEnabeled parameter to only return security group ids
+//
+// Reference: https://docs.microsoft.com/en-us/graph/api/directoryobject-getmembergroups?view=graph-rest-1.0&tabs=http
+func (u User) GetMemberGroupsAsStrings(ctx context.Context, securityGroupsEnabeled bool) ([]string, error) {
+	return u.graphClient.getMemberGroups(u.ID, ctx, securityGroupsEnabeled)
 }
 
 // UpdateUser patches this user object. Note, only set the fields that should be changed.

@@ -1,7 +1,9 @@
 package msgraph
 
 import (
+	"context"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -157,4 +159,44 @@ func TestUser_String(t *testing.T) {
 			t.Errorf("User.String() = %v, want %v", got, tt.want)
 		}
 	})
+}
+
+func TestUser_GetMemberGroupsAsStrings(t *testing.T) {
+	u := GetTestUser(t)
+	type args struct {
+		ctx                    context.Context
+		securityGroupsEnabeled bool
+	}
+	tests := []struct {
+		name    string
+		u       User
+		args    args
+		want    []string
+		wantErr bool
+	}{
+		{
+			name:    "Test user func GetMembershipGroupsAsStrings",
+			u:       u,
+			args:    args{ctx: context.Background(), securityGroupsEnabeled: true},
+			wantErr: false,
+		},
+		{
+			name:    "User not initialized by GraphClient",
+			args:    args{ctx: context.Background(), securityGroupsEnabeled: true},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			got, err := u.GetMemberGroupsAsStrings(tt.args.ctx, tt.args.securityGroupsEnabeled)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("User.GetMemberGroupsAsStrings() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("User.GetMemberGroupsAsStrings() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
