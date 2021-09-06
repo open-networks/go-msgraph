@@ -137,11 +137,6 @@ func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams,
 	return g.makeAPICall(apiCall, http.MethodGet, reqParams, nil, v)
 }
 
-// makeGETAPICALLWithToken performs an API-Call to the msgraph API
-func (g *GraphClient) makeGETAPICALLWithToken(apiCall string, reqParams getRequestParams, v interface{}, tokenUrl string) error {
-	return g.makeSkipTokenApiCall(apiCall, http.MethodGet, reqParams, nil, v, tokenUrl)
-}
-
 // makePOSTAPICall performs an API-Call to the msgraph API.
 func (g *GraphClient) makePOSTAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
 	return g.makeAPICall(apiCall, http.MethodPost, reqParams, body, v)
@@ -208,13 +203,11 @@ func (g *GraphClient) makeAPICall(apiCall string, httpMethod string, reqParams g
 	return g.performRequest(req, v)
 }
 
-// makeSkipTokenAPICall performs an API-Call to the msgraph API. This func uses sync.Mutex to synchronize all API-calls.
+// makeSkipTokenAPICall performs an API-Call to the msgraph API.
 //
 // Gets the results of the page specified by the skip token
-func (g *GraphClient) makeSkipTokenApiCall(apiCall string, httpMethod string, reqParams getRequestParams, body io.Reader, v interface{}, skipToken string) error {
-	g.makeSureURLsAreSet()
-	g.apiCall.Lock()
-	defer g.apiCall.Unlock() // unlock when the func returns
+func (g *GraphClient) makeSkipTokenApiCall(httpMethod string, v interface{}, skipToken string) error {
+
 	// Check token
 	if g.token.WantsToBeRefreshed() { // Token not valid anymore?
 		err := g.refreshToken()
@@ -223,20 +216,44 @@ func (g *GraphClient) makeSkipTokenApiCall(apiCall string, httpMethod string, re
 		}
 	}
 
-	req, err := http.NewRequestWithContext(reqParams.Context(), httpMethod, skipToken, body)
+	req, err := http.NewRequest(httpMethod, skipToken, nil)
 	if err != nil {
 		return fmt.Errorf("HTTP request error: %v", err)
 	}
+
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", g.token.GetAccessToken())
 
-	for key, vals := range reqParams.Headers() {
-		for idx := range vals {
-			req.Header.Add(key, vals[idx])
-		}
+	return g.performSkipTokenRequest(req, v)
+}
+
+// performSkipTokenRequest performs a pre-prepared http.Request and does the proper error-handling for it.
+// does a json.Unmarshal into the v interface{} and returns the error of it if everything went well so far.
+func (g *GraphClient) performSkipTokenRequest(req *http.Request, v interface{}) error {
+	httpClient := &http.Client{
+		Timeout: time.Second * 10,
 	}
 
-	return g.performRequest(req, v)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("HTTP response error: %v of http.Request: %v", err, req.URL)
+	}
+	defer resp.Body.Close() // close body when func returns
+
+	body, err := ioutil.ReadAll(resp.Body) // read body first to append it to the error (if any)
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		// Hint: this will mostly be the case if the tenant ID cannot be found, the Application ID cannot be found or the clientSecret is incorrect.
+		// The cause will be described in the body, hence we have to return the body too for proper error-analysis
+		return fmt.Errorf("StatusCode is not OK: %v. Body: %v ", resp.StatusCode, string(body))
+	}
+
+	// fmt.Println("Body: ", string(body))
+
+	if err != nil {
+		return fmt.Errorf("HTTP response read error: %v of http.Request: %v", err, req.URL)
+	}
+
+	return json.Unmarshal(body, &v) // return the error of the json unmarshal
 }
 
 // performRequest performs a pre-prepared http.Request and does the proper error-handling for it.
@@ -258,8 +275,6 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 		return fmt.Errorf("StatusCode is not OK: %v. Body: %v ", resp.StatusCode, string(body))
 	}
 
-	//fmt.Println("Body: ", string(body))
-
 	if err != nil {
 		return fmt.Errorf("HTTP response read error: %v of http.Request: %v", err, req.URL)
 	}
@@ -268,7 +283,46 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 	if req.Method == http.MethodDelete || req.Method == http.MethodPatch {
 		return nil
 	}
-	return json.Unmarshal(body, &v) // return the error of the json unmarshal
+	type skipTokenCallData struct {
+		Data      []json.RawMessage `json:"value"`
+		SkipToken string            `json:"@odata.nextLink"`
+	}
+	res := skipTokenCallData{}
+
+	err = json.Unmarshal(body, &res)
+	if err != nil {
+		return err
+	}
+
+	if res.SkipToken == "" {
+		return json.Unmarshal(body, &v) // return the error of the json unmarshal
+	}
+
+	data := res.Data
+	for res.SkipToken != "" {
+		skipToken := res.SkipToken
+		res = skipTokenCallData{}
+		err := g.makeSkipTokenApiCall(req.Method, &res, skipToken)
+		if err != nil {
+			return err
+		}
+		data = append(data, res.Data...)
+	}
+
+	var dataBytes []byte
+
+	//converts json.RawMessage into []bytes and adds a comma at the end
+	for _, v := range data {
+		b, _ := v.MarshalJSON()
+		dataBytes = append(dataBytes, b...)
+		dataBytes = append(dataBytes, []byte(",")...)
+	}
+
+	toReturn := []byte(`{"value":[`)                             //add missing "value" tag
+	toReturn = append(toReturn, dataBytes[:len(dataBytes)-1]...) //append previous data and skip last comma
+	toReturn = append(toReturn, []byte("]}")...)
+
+	return json.Unmarshal(toReturn, &v) // return the error of the json unmarshal
 }
 
 // ListUsers returns a list of all users
@@ -277,29 +331,12 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/user_list
 func (g *GraphClient) ListUsers(opts ...ListQueryOption) (Users, error) {
 	resource := "/users"
-	var usr struct {
-		Users     Users  `json:"value"`
-		SkipToken string `json:"@odata.nextLink"`
+	var marsh struct {
+		Users Users `json:"value"`
 	}
-
-	var users Users
-
-	reqParams := compileListQueryOptions(opts)
-
-	err := g.makeGETAPICall(resource, reqParams, &usr)
-	users = append(users, usr.Users...)
-
-	for usr.SkipToken != "" {
-		tempToken := usr.SkipToken
-		err = g.makeGETAPICALLWithToken(resource, reqParams, &usr, usr.SkipToken)
-		users = append(users, usr.Users...)
-		if tempToken == usr.SkipToken {
-			break
-		}
-	}
-
-	users.setGraphClient(g)
-	return users, err
+	err := g.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
+	marsh.Users.setGraphClient(g)
+	return marsh.Users, err
 }
 
 // ListGroups returns a list of all groups
@@ -308,28 +345,15 @@ func (g *GraphClient) ListUsers(opts ...ListQueryOption) (Users, error) {
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list
 func (g *GraphClient) ListGroups(opts ...ListQueryOption) (Groups, error) {
 	resource := "/groups"
-	var grp struct {
-		Groups    Groups `json:"value"`
-		SkipToken string `json:"@odata.nextLink"`
+
+	var reqParams = compileListQueryOptions(opts)
+
+	var marsh struct {
+		Groups Groups `json:"value"`
 	}
-
-	var groups Groups
-
-	reqParams := compileListQueryOptions(opts)
-
-	err := g.makeGETAPICall(resource, reqParams, &grp)
-	groups = append(groups, grp.Groups...)
-
-	for grp.SkipToken != "" {
-		tempToken := grp.SkipToken
-		err = g.makeGETAPICALLWithToken(resource, reqParams, &grp, grp.SkipToken)
-		groups = append(groups, grp.Groups...)
-		if tempToken == grp.SkipToken {
-			break
-		}
-	}
-	groups.setGraphClient(g)
-	return groups, err
+	err := g.makeGETAPICall(resource, reqParams, &marsh)
+	marsh.Groups.setGraphClient(g)
+	return marsh.Groups, err
 }
 
 // GetUser returns the user object associated to the given user identified by either
