@@ -7,3 +7,4 @@ A special thanks for their work to the following contributors:
 
 * [@baez90](https://github.com/baez90)
 * [@Mattes83](https://github.com/Mattes83)
+* [@Goorsky123](https://github.com/Goorsky123)
