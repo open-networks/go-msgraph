@@ -10,20 +10,21 @@ import (
 //
 // See: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_get
 type Group struct {
-	ID                           string
-	Description                  string
-	DisplayName                  string
-	CreatedDateTime              time.Time
-	GroupTypes                   []string
-	Mail                         string
-	MailEnabled                  bool
-	MailNickname                 string
-	OnPremisesLastSyncDateTime   time.Time // defaults to 0001-01-01 00:00:00 +0000 UTC if there's none
-	OnPremisesSecurityIdentifier string
-	OnPremisesSyncEnabled        bool
-	ProxyAddresses               []string
-	SecurityEnabled              bool
-	Visibility                   string
+	ID                           string    `json:"id,omitempty"`
+	Description                  string    `json:"description,omitempty"`
+	DisplayName                  string    `json:"displayName,omitempty"`
+	CreatedDateTime              time.Time `json:"createdDateTime,omitempty"`
+	GroupTypes                   []string  `json:"groupTypes,omitempty"`
+	Mail                         string    `json:"mail,omitempty"`
+	MailEnabled                  bool      `json:"mailEnabled,omitempty"`
+	MailNickname                 string    `json:"mailNickname,omitempty"`
+	OnPremisesLastSyncDateTime   time.Time `json:"onPremisesLastSyncDateTime,omitempty"` // defaults to 0001-01-01 00:00:00 +0000 UTC if there's none
+	OnPremisesSecurityIdentifier string    `json:"onPremisesSecurityIdentifier,omitempty"`
+	OnPremisesSyncEnabled        bool      `json:"onPremisesSyncEnabled,omitempty"`
+	ProxyAddresses               []string  `json:"proxyAddresses,omitempty"`
+	SecurityEnabled              bool      `json:"securityEnabled,omitempty"`
+	Visibility                   string    `json:"visibility,omitempty"`
+	MemberOf                     []Member  `json:"memberOf,omitempty"`
 
 	graphClient *GraphClient // the graphClient that called the group
 }
@@ -74,6 +75,7 @@ func (g *Group) UnmarshalJSON(data []byte) error {
 		ProxyAddresses               []string `json:"proxyAddresses"`
 		SecurityEnabled              bool     `json:"securityEnabled"`
 		Visibility                   string   `json:"visibility"`
+		MemberOf                     []Member `json:"memberOf"`
 	}{}
 
 	err := json.Unmarshal(data, &tmp)
@@ -101,6 +103,7 @@ func (g *Group) UnmarshalJSON(data []byte) error {
 	g.ProxyAddresses = tmp.ProxyAddresses
 	g.SecurityEnabled = tmp.SecurityEnabled
 	g.Visibility = tmp.Visibility
+	g.MemberOf = tmp.MemberOf
 
 	return nil
 }

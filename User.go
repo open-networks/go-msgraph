@@ -25,6 +25,17 @@ type User struct {
 	Department        string            `json:"department,omitempty"`
 	MailNickname      string            `json:"mailNickname,omitempty"`
 	PasswordProfile   PasswordProfile   `json:"passwordProfile,omitempty"`
+	OtherMails        []string          `json:"otherMails,omitempty"`
+	Country           string            `json:"country,omitempty"`
+	State             string            `json:"state,omitempty"`
+	City              string            `json:"city,omitempty"`
+	StreetAddress     string            `json:"streetAddress"`
+	OfficeLocation    string            `json:"officeLocation,omitempty"`
+	JobTitle          string            `json:"jobTitle,omitempty"`
+	PostalCode        string            `json:"postalCode,omitempty"`
+	UsageLocation     string            `json:"usageLocation,omitempty"`
+	ProxyAddresses    []string          `json:"proxyAddresses,omitempty"`
+	MemberOf          []Member          `json:"memberOf,omitempty"`
 
 	activePhone string       // private cache for the active phone number
 	graphClient *GraphClient // the graphClient that called the user

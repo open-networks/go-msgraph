@@ -18,11 +18,11 @@ This implementation has been written to get various user, group and calendar det
 
 working & tested:
 
-- list users, groups, calendars, calendarevents
+- list users, groups, calendars, calendarevents, domains, devices
 - automatically grab & refresh token for API-access
 - json-load the GraphClient struct & initialize it
 - set timezone for full-day CalendarEvent
-- use `$select`, `$search` and `$filter` when querying data
+- use `$select`, `$search`, `$filter` and `$expand` when querying data
 - `context`-aware API calls, can be cancelled.
 - loading huge data sets with paging, thanks to PR #20 - [@Goorsky123](https://github.com/Goorsky123)
 
@@ -54,6 +54,10 @@ groups, err := graphClient.ListGroups()
 groupMembers, err := groups[0].ListMembers()
 // Lists all Calendars of a user
 calendars, err := user.ListCalendars()
+// List all domains
+domains, err := graphClient.ListDomains()
+// List all devices
+devices, err := graphClient.ListDevices()
 
 // Let all full-day calendar events that are loaded from ms graph be set to timezone Europe/Vienna:
 // Standard is time.Local
