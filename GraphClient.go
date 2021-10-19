@@ -20,6 +20,7 @@ const (
 	odataSearchParamKey = "$search"
 	odataFilterParamKey = "$filter"
 	odataSelectParamKey = "$select"
+	odataExpandParamKey = "$expand"
 )
 
 // GraphClient represents a msgraph API connection instance.
@@ -325,6 +326,17 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 	return json.Unmarshal(toReturn, &v) // return the error of the json unmarshal
 }
 
+// ListDomains returns a list of all domains
+func (g *GraphClient) ListDomains(opts ...ListQueryOption) (Domains, error) {
+	resource := "/domains"
+	var marsh struct {
+		Domains Domains `json:"value"`
+	}
+	err := g.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
+	marsh.Domains.setGraphClient(g)
+	return marsh.Domains, err
+}
+
 // ListUsers returns a list of all users
 // Supports optional OData query parameters https://docs.microsoft.com/en-us/graph/query-parameters
 //
@@ -345,15 +357,23 @@ func (g *GraphClient) ListUsers(opts ...ListQueryOption) (Users, error) {
 // Reference: https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/group_list
 func (g *GraphClient) ListGroups(opts ...ListQueryOption) (Groups, error) {
 	resource := "/groups"
-
-	var reqParams = compileListQueryOptions(opts)
-
 	var marsh struct {
 		Groups Groups `json:"value"`
 	}
-	err := g.makeGETAPICall(resource, reqParams, &marsh)
+	err := g.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
 	marsh.Groups.setGraphClient(g)
 	return marsh.Groups, err
+}
+
+// ListDevices returns a list of all devices
+func (g *GraphClient) ListDevices(opts ...ListQueryOption) (Devices, error) {
+	resource := "/devices"
+	var marsh struct {
+		Devices Devices `json:"value"`
+	}
+	err := g.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
+	marsh.Devices.setGraphClient(g)
+	return marsh.Devices, err
 }
 
 // GetUser returns the user object associated to the given user identified by either

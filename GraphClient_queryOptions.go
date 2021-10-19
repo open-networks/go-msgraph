@@ -51,6 +51,13 @@ var (
 		}
 	}
 
+	// ListWithExpand - $expand - Filters properties (columns) - https://docs.microsoft.com/en-us/graph/query-parameters#expand-parameter
+	ListWithExpand = func(expandParam string) ListQueryOption {
+		return func(opts *listQueryOptions) {
+			opts.queryValues.Add(odataExpandParamKey, expandParam)
+		}
+	}
+
 	// ListWithFilter - $filter - Filters results (rows) - https://docs.microsoft.com/en-us/graph/query-parameters#filter-parameter
 	ListWithFilter = func(filterParam string) ListQueryOption {
 		return func(opts *listQueryOptions) {

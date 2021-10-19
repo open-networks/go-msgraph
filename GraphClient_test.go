@@ -34,8 +34,10 @@ var (
 	msGraphExistingCalendarsOfUser []string
 	// the number of expected results when searching for the msGraphExistingGroupDisplayName with $search or $filter
 	msGraphExistingGroupDisplayNameNumRes uint64
-	// a domain-name for unit tests to create a user or other objects, e.g. contoso.com - omit the @
-	msGraphDomainNameForCreateTests string
+	// a valid domain id from msgraph, e.g. technicians@contoso.com
+	msGraphExistingDomainId string
+	// a valid devicedisplayname from msgraph
+	msGraphExistingDeviceDisplayName string
 	// the graphclient used to perform all tests
 	graphClient *GraphClient
 	// marker if the calendar tests should be skipped - set if msGraphExistingCalendarsOfUser is empty
@@ -56,7 +58,8 @@ func TestMain(m *testing.M) {
 	msGraphClientSecret = getEnvOrPanic("MSGraphClientSecret")
 	msGraphExistingGroupDisplayName = getEnvOrPanic("MSGraphExistingGroupDisplayName")
 	msGraphExistingUserPrincipalInGroup = getEnvOrPanic("MSGraphExistingUserPrincipalInGroup")
-	msGraphDomainNameForCreateTests = getEnvOrPanic("MSGraphDomainNameForCreateTests")
+	msGraphExistingDomainId = getEnvOrPanic("MSGraphExistingDomainId")
+	msGraphExistingDeviceDisplayName = getEnvOrPanic("MSGraphExistingDeviceDisplayName")
 
 	if msGraphAzureADAuthEndpoint = os.Getenv("MSGraphAzureADAuthEndpoint"); msGraphAzureADAuthEndpoint == "" {
 		msGraphAzureADAuthEndpoint = AzureADAuthEndpointGlobal
@@ -101,7 +104,7 @@ func createUnitTestUser(t *testing.T) User {
 		AccountEnabled:    true,
 		DisplayName:       "go-msgraph unit-test generated user " + time.Now().Format("2006-01-02") + " - random " + rndstring,
 		MailNickname:      "go-msgraph.unit-test.generated." + rndstring,
-		UserPrincipalName: "go-msgraph.unit-test.generated." + rndstring + "@" + msGraphDomainNameForCreateTests,
+		UserPrincipalName: "go-msgraph.unit-test.generated." + rndstring + "@" + msGraphExistingDomainId,
 		PasswordProfile:   PasswordProfile{Password: randomString(32)},
 	})
 	if err != nil {
@@ -603,7 +606,7 @@ func TestGraphClient_CreateAndDeleteUser(t *testing.T) {
 				AccountEnabled:    true,
 				DisplayName:       "go-msgraph unit-test generated user " + time.Now().Format("2006-01-02") + " - random " + rndstring,
 				MailNickname:      "go-msgraph.unit-test.generated." + rndstring,
-				UserPrincipalName: "go-msgraph.unit-test.generated." + rndstring + "@" + msGraphDomainNameForCreateTests,
+				UserPrincipalName: "go-msgraph.unit-test.generated." + rndstring + "@" + msGraphExistingDomainId,
 				PasswordProfile:   PasswordProfile{Password: randomString(32)},
 			},
 			wantErr: false,
