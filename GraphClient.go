@@ -132,6 +132,11 @@ func (g *GraphClient) refreshToken() error {
 	return err
 }
 
+// GetToken returns a copy the currently token used by this GraphClient instance.
+func (g *GraphClient) GetToken() Token {
+	return g.token
+}
+
 // makeGETAPICall performs an API-Call to the msgraph API.
 func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams, v interface{}) error {
 	return g.makeAPICall(apiCall, http.MethodGet, reqParams, nil, v)
@@ -353,6 +358,29 @@ func (g *GraphClient) ListGroups(opts ...ListQueryOption) (Groups, error) {
 	}
 	err := g.makeGETAPICall(resource, reqParams, &marsh)
 	marsh.Groups.setGraphClient(g)
+	return marsh.Groups, err
+}
+
+// getMemberGroups returns a list of all group IDs the user is a member of.
+// You can specify the securityGroupsEnabled parameter to only return security group IDs.
+//
+// Reference: https://docs.microsoft.com/en-us/graph/api/directoryobject-getmembergroups?view=graph-rest-1.0&tabs=http
+func (g *GraphClient) getMemberGroups(identifier string, securityEnabledOnly bool, opts ...GetQueryOption) ([]string, error) {
+	resource := fmt.Sprintf("/directoryObjects/%v/getMemberGroups", identifier)
+	var post struct {
+		SecurityEnabledOnly bool `json:"securityEnabledOnly"`
+	}
+	var marsh struct {
+		Groups []string `json:"value"`
+	}
+	post.SecurityEnabledOnly = securityEnabledOnly
+	bodyBytes, err := json.Marshal(post)
+	if err != nil {
+		return marsh.Groups, err
+	}
+	body := bytes.NewReader(bodyBytes)
+
+	err = g.makePOSTAPICall(resource, compileGetQueryOptions(opts), body, &marsh)
 	return marsh.Groups, err
 }
 

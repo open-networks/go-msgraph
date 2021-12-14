@@ -166,6 +166,49 @@ func TestUser_String(t *testing.T) {
 	})
 }
 
+func TestUser_GetMemberGroupsAsStrings(t *testing.T) {
+	u := GetTestUser(t)
+	tests := []struct {
+		name                   string
+		u                      User
+		securityGroupsEnabeled bool
+		opt                    GetQueryOption
+		wantErr                bool
+	}{
+		{
+			name:                   "Test user func GetMembershipGroupsAsStrings",
+			u:                      u,
+			securityGroupsEnabeled: true,
+			opt:                    GetWithContext(nil),
+			wantErr:                false,
+		}, {
+			name:                   "Test user func GetMembershipGroupsAsStrings - no securityGroupsEnabeledF",
+			u:                      u,
+			securityGroupsEnabeled: false,
+			opt:                    GetWithContext(nil),
+			wantErr:                false,
+		},
+		{
+			name:                   "User not initialized by GraphClient",
+			securityGroupsEnabeled: true,
+			opt:                    GetWithContext(nil),
+			wantErr:                true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.u.GetMemberGroupsAsStrings(tt.securityGroupsEnabeled, tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("User.GetMemberGroupsAsStrings() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && len(got) == 0 {
+				t.Errorf("User.GetMemberGroupsAsStrings() = %v, len(%d), want at least one value", got, len(got))
+			}
+		})
+	}
+}
+
 func TestUser_UpdateUser(t *testing.T) {
 	// testing for ErrNotGraphClientSourced
 	notGraphClientSourcedUser := User{ID: "none"}
