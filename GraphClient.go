@@ -133,7 +133,7 @@ func (g *GraphClient) refreshToken() error {
 	return err
 }
 
-// returns client Token
+// GetToken returns a copy the currently token used by this GraphClient instance.
 func (g *GraphClient) GetToken() Token {
 	return g.token
 }
@@ -362,8 +362,8 @@ func (g *GraphClient) ListGroups(opts ...ListQueryOption) (Groups, error) {
 	return marsh.Groups, err
 }
 
-// getMemberGroups returns a list of all group ids the user is a member of
-// You can specify the securityGroupsEnabeled parameter to only return security group ids
+// getMemberGroups returns a list of all group IDs the user is a member of.
+// You can specify the securityGroupsEnabled parameter to only return security group IDs.
 //
 // Reference: https://docs.microsoft.com/en-us/graph/api/directoryobject-getmembergroups?view=graph-rest-1.0&tabs=http
 func (g *GraphClient) getMemberGroups(identifier string, ctx context.Context, securityGroupsEnabeled bool) ([]string, error) {
