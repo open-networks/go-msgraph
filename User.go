@@ -2,7 +2,6 @@ package msgraph
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -146,15 +145,17 @@ func (u User) GetFullName() string {
 	return fmt.Sprintf("%v %v", u.GivenName, u.Surname)
 }
 
-// GetMemberGroupsAsStrings returns a list of all group ids the user is a member of
-// You can specify the securityGroupsEnabeled parameter to only return security group ids
+// GetMemberGroupsAsStrings returns a list of all group IDs the user is a member of.
+// You can specify the securityGroupsEnabeled parameter to only return security group IDs.
+//
+// opts ...GetQueryOption - only msgraph.GetWithContext is supported.
 //
 // Reference: https://docs.microsoft.com/en-us/graph/api/directoryobject-getmembergroups?view=graph-rest-1.0&tabs=http
-func (u User) GetMemberGroupsAsStrings(ctx context.Context, securityGroupsEnabeled bool) ([]string, error) {
+func (u User) GetMemberGroupsAsStrings(securityGroupsEnabeled bool, opts ...GetQueryOption) ([]string, error) {
 	if u.graphClient == nil {
 		return nil, ErrNotGraphClientSourced
 	}
-	return u.graphClient.getMemberGroups(u.ID, ctx, securityGroupsEnabeled)
+	return u.graphClient.getMemberGroups(u.ID, securityGroupsEnabeled, compileGetQueryOptions(opts))
 }
 
 // PrettySimpleString returns the User-instance simply formatted for logging purposes: {FullName (email) (activePhone)}
