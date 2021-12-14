@@ -76,6 +76,18 @@ func (g Group) ListTransitiveMembers(opts ...ListQueryOption) (Users, error) {
 	return marsh.Users, g.graphClient.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
 }
 
+// GetMemberGroupsAsStrings returns a list of all group IDs the user is a member of.
+//
+// opts ...GetQueryOption - only msgraph.GetWithContext is supported.
+//
+// Reference: https://docs.microsoft.com/en-us/graph/api/directoryobject-getmembergroups?view=graph-rest-1.0&tabs=http
+func (g Group) GetMemberGroupsAsStrings(opts ...GetQueryOption) ([]string, error) {
+	if g.graphClient == nil {
+		return nil, ErrNotGraphClientSourced
+	}
+	return g.graphClient.getMemberGroups(g.ID, false, opts...) // securityEnabledOnly is not supported for Groups, see documentation / API-reference
+}
+
 // UnmarshalJSON implements the json unmarshal to be used by the json-library
 func (g *Group) UnmarshalJSON(data []byte) error {
 	tmp := struct {

@@ -365,15 +365,15 @@ func (g *GraphClient) ListGroups(opts ...ListQueryOption) (Groups, error) {
 // You can specify the securityGroupsEnabled parameter to only return security group IDs.
 //
 // Reference: https://docs.microsoft.com/en-us/graph/api/directoryobject-getmembergroups?view=graph-rest-1.0&tabs=http
-func (g *GraphClient) getMemberGroups(identifier string, securityGroupsEnabeled bool, opts ...GetQueryOption) ([]string, error) {
-	resource := fmt.Sprintf("/users/%v/getMemberGroups", identifier)
+func (g *GraphClient) getMemberGroups(identifier string, securityEnabledOnly bool, opts ...GetQueryOption) ([]string, error) {
+	resource := fmt.Sprintf("/directoryObjects/%v/getMemberGroups", identifier)
 	var post struct {
 		SecurityEnabledOnly bool `json:"securityEnabledOnly"`
 	}
 	var marsh struct {
 		Groups []string `json:"value"`
 	}
-	post.SecurityEnabledOnly = securityGroupsEnabeled
+	post.SecurityEnabledOnly = securityEnabledOnly
 	bodyBytes, err := json.Marshal(post)
 	if err != nil {
 		return marsh.Groups, err

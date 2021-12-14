@@ -114,3 +114,40 @@ func TestGroup_ListTransitiveMembers(t *testing.T) {
 		})
 	}
 }
+
+func TestGroup_GetMemberGroupsAsStrings(t *testing.T) {
+	testGroup := GetTestGroup(t)
+
+	tests := []struct {
+		name    string
+		g       Group
+		opts    []GetQueryOption
+		wantErr bool
+	}{
+		{
+			name:    "Test group func GetMembershipGroupsAsStrings",
+			g:       testGroup,
+			wantErr: false,
+		}, {
+			name:    "Test group func GetMembershipGroupsAsStrings - no securityGroupsEnabeledF",
+			g:       testGroup,
+			wantErr: false,
+		},
+		{
+			name:    "Group not initialized by GraphClient",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.g.GetMemberGroupsAsStrings(tt.opts...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Group.GetMemberGroupsAsStrings() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && len(got) == 0 {
+				t.Errorf("Group.GetMemberGroupsAsStrings() = %v, len(%d), want at least one value", got, len(got))
+			}
+		})
+	}
+}
