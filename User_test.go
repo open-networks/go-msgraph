@@ -3,7 +3,6 @@ package msgraph
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -178,7 +177,6 @@ func TestUser_GetMemberGroupsAsStrings(t *testing.T) {
 		name    string
 		u       User
 		args    args
-		want    []string
 		wantErr bool
 	}{
 		{
@@ -195,17 +193,16 @@ func TestUser_GetMemberGroupsAsStrings(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			got, err := u.GetMemberGroupsAsStrings(tt.args.ctx, tt.args.securityGroupsEnabeled)
+			got, err := tt.u.GetMemberGroupsAsStrings(tt.args.ctx, tt.args.securityGroupsEnabeled)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("User.GetMemberGroupsAsStrings() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("User.GetMemberGroupsAsStrings() = %v, want %v", got, tt.want)
+			if !tt.wantErr && len(got) == 0 {
+				t.Errorf("User.GetMemberGroupsAsStrings() = %v, want at least one value", got)
 			}
 		})
-  }
+	}
 }
 
 func TestUser_UpdateUser(t *testing.T) {

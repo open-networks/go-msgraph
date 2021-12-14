@@ -151,6 +151,9 @@ func (u User) GetFullName() string {
 //
 // Reference: https://docs.microsoft.com/en-us/graph/api/directoryobject-getmembergroups?view=graph-rest-1.0&tabs=http
 func (u User) GetMemberGroupsAsStrings(ctx context.Context, securityGroupsEnabeled bool) ([]string, error) {
+	if u.graphClient == nil {
+		return nil, ErrNotGraphClientSourced
+	}
 	return u.graphClient.getMemberGroups(u.ID, ctx, securityGroupsEnabeled)
 }
 
