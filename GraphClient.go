@@ -365,7 +365,7 @@ func (g *GraphClient) ListGroups(opts ...ListQueryOption) (Groups, error) {
 // You can specify the securityGroupsEnabled parameter to only return security group IDs.
 //
 // Reference: https://docs.microsoft.com/en-us/graph/api/directoryobject-getmembergroups?view=graph-rest-1.0&tabs=http
-func (g *GraphClient) getMemberGroups(identifier string, securityGroupsEnabeled bool, opts *getQueryOptions) ([]string, error) {
+func (g *GraphClient) getMemberGroups(identifier string, securityGroupsEnabeled bool, opts ...GetQueryOption) ([]string, error) {
 	resource := fmt.Sprintf("/users/%v/getMemberGroups", identifier)
 	var post struct {
 		SecurityEnabledOnly bool `json:"securityEnabledOnly"`
@@ -380,7 +380,7 @@ func (g *GraphClient) getMemberGroups(identifier string, securityGroupsEnabeled 
 	}
 	body := bytes.NewReader(bodyBytes)
 
-	err = g.makePOSTAPICall(resource, opts, body, &marsh)
+	err = g.makePOSTAPICall(resource, compileGetQueryOptions(opts), body, &marsh)
 	return marsh.Groups, err
 }
 

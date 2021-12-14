@@ -155,7 +155,7 @@ func (u User) GetMemberGroupsAsStrings(securityGroupsEnabeled bool, opts ...GetQ
 	if u.graphClient == nil {
 		return nil, ErrNotGraphClientSourced
 	}
-	return u.graphClient.getMemberGroups(u.ID, securityGroupsEnabeled, compileGetQueryOptions(opts))
+	return u.graphClient.getMemberGroups(u.ID, securityGroupsEnabeled, opts...)
 }
 
 // PrettySimpleString returns the User-instance simply formatted for logging purposes: {FullName (email) (activePhone)}
