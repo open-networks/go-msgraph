@@ -82,3 +82,35 @@ func TestGroup_String(t *testing.T) {
 		})
 	}
 }
+
+func TestGroup_ListTransitiveMembers(t *testing.T) {
+	testGroup := GetTestGroup(t)
+
+	tests := []struct {
+		name    string
+		g       Group
+		wantErr bool
+	}{
+		{
+			name:    "GraphClient created Group",
+			g:       testGroup,
+			wantErr: false,
+		}, {
+			name:    "Not GraphClient created Group",
+			g:       Group{DisplayName: "Test not GraphClient sourced"},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.g.ListTransitiveMembers()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Group.ListTransitiveMembers() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && len(got) == 0 {
+				t.Errorf("Group.ListTransitiveMembers() = %v, want at least one member of that group", got)
+			}
+		})
+	}
+}
