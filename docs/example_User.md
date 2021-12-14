@@ -45,4 +45,8 @@ err := user.UpdateUser(msgraph.User{DisplayName: "Rabbit 2.0"}, msgraph.UpdateWi
 
 // disable acccount
 err := user.DisableAccount()
+// enable user account again
+err := user.UpdateUser(User{AccountEnabled: true})
+// delete a user, use with caution!
+err := user.DeleteUser()
 ````

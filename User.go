@@ -138,7 +138,7 @@ func (u User) GetShortName() string {
 	if len(supn) != 2 {
 		return u.UserPrincipalName
 	}
-	return strings.ToUpper(supn[0])
+	return supn[0]
 }
 
 // GetFullName returns the full name in that format: <firstname> <lastname>
@@ -152,6 +152,11 @@ func (u User) GetFullName() string {
 // Reference: https://docs.microsoft.com/en-us/graph/api/directoryobject-getmembergroups?view=graph-rest-1.0&tabs=http
 func (u User) GetMemberGroupsAsStrings(ctx context.Context, securityGroupsEnabeled bool) ([]string, error) {
 	return u.graphClient.getMemberGroups(u.ID, ctx, securityGroupsEnabeled)
+}
+
+// PrettySimpleString returns the User-instance simply formatted for logging purposes: {FullName (email) (activePhone)}
+func (u User) PrettySimpleString() string {
+	return fmt.Sprintf("{ %v (%v) (%v) }", u.GetFullName(), u.Mail, u.GetActivePhone())
 }
 
 // UpdateUser patches this user object. Note, only set the fields that should be changed.
@@ -215,11 +220,6 @@ func (u User) DeleteUser(opts ...DeleteQueryOption) error {
 	// TODO: check return body, maybe there is some potential success or error message hidden in it?
 	err := u.graphClient.makeDELETEAPICall(resource, compileDeleteQueryOptions(opts), nil)
 	return err
-}
-
-// PrettySimpleString returns the User-instance simply formatted for logging purposes: {FullName (email) (activePhone)}
-func (u User) PrettySimpleString() string {
-	return fmt.Sprintf("{ %v (%v) (%v) }", u.GetFullName(), u.Mail, u.GetActivePhone())
 }
 
 // Equal returns wether the user equals the other User by comparing every property

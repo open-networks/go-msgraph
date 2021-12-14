@@ -143,7 +143,7 @@ func (g *GraphClient) makeGETAPICall(apiCall string, reqParams getRequestParams,
 	return g.makeAPICall(apiCall, http.MethodGet, reqParams, nil, v)
 }
 
-// makeGETAPICall performs an API-Call to the msgraph API.
+// makePOSTAPICall performs an API-Call to the msgraph API.
 func (g *GraphClient) makePOSTAPICall(apiCall string, reqParams getRequestParams, body io.Reader, v interface{}) error {
 	return g.makeAPICall(apiCall, http.MethodPost, reqParams, body, v)
 }
@@ -209,6 +209,59 @@ func (g *GraphClient) makeAPICall(apiCall string, httpMethod string, reqParams g
 	return g.performRequest(req, v)
 }
 
+// makeSkipTokenAPICall performs an API-Call to the msgraph API.
+//
+// Gets the results of the page specified by the skip token
+func (g *GraphClient) makeSkipTokenApiCall(httpMethod string, v interface{}, skipToken string) error {
+
+	// Check token
+	if g.token.WantsToBeRefreshed() { // Token not valid anymore?
+		err := g.refreshToken()
+		if err != nil {
+			return err
+		}
+	}
+
+	req, err := http.NewRequest(httpMethod, skipToken, nil)
+	if err != nil {
+		return fmt.Errorf("HTTP request error: %v", err)
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", g.token.GetAccessToken())
+
+	return g.performSkipTokenRequest(req, v)
+}
+
+// performSkipTokenRequest performs a pre-prepared http.Request and does the proper error-handling for it.
+// does a json.Unmarshal into the v interface{} and returns the error of it if everything went well so far.
+func (g *GraphClient) performSkipTokenRequest(req *http.Request, v interface{}) error {
+	httpClient := &http.Client{
+		Timeout: time.Second * 10,
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("HTTP response error: %v of http.Request: %v", err, req.URL)
+	}
+	defer resp.Body.Close() // close body when func returns
+
+	body, err := ioutil.ReadAll(resp.Body) // read body first to append it to the error (if any)
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		// Hint: this will mostly be the case if the tenant ID cannot be found, the Application ID cannot be found or the clientSecret is incorrect.
+		// The cause will be described in the body, hence we have to return the body too for proper error-analysis
+		return fmt.Errorf("StatusCode is not OK: %v. Body: %v ", resp.StatusCode, string(body))
+	}
+
+	// fmt.Println("Body: ", string(body))
+
+	if err != nil {
+		return fmt.Errorf("HTTP response read error: %v of http.Request: %v", err, req.URL)
+	}
+
+	return json.Unmarshal(body, &v) // return the error of the json unmarshal
+}
+
 // performRequest performs a pre-prepared http.Request and does the proper error-handling for it.
 // does a json.Unmarshal into the v interface{} and returns the error of it if everything went well so far.
 func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
@@ -228,8 +281,6 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 		return fmt.Errorf("StatusCode is not OK: %v. Body: %v ", resp.StatusCode, string(body))
 	}
 
-	//fmt.Println("Body: ", string(body))
-
 	if err != nil {
 		return fmt.Errorf("HTTP response read error: %v of http.Request: %v", err, req.URL)
 	}
@@ -238,7 +289,46 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 	if req.Method == http.MethodDelete || req.Method == http.MethodPatch {
 		return nil
 	}
-	return json.Unmarshal(body, &v) // return the error of the json unmarshal
+	type skipTokenCallData struct {
+		Data      []json.RawMessage `json:"value"`
+		SkipToken string            `json:"@odata.nextLink"`
+	}
+	res := skipTokenCallData{}
+
+	err = json.Unmarshal(body, &res)
+	if err != nil {
+		return err
+	}
+
+	if res.SkipToken == "" {
+		return json.Unmarshal(body, &v) // return the error of the json unmarshal
+	}
+
+	data := res.Data
+	for res.SkipToken != "" {
+		skipToken := res.SkipToken
+		res = skipTokenCallData{}
+		err := g.makeSkipTokenApiCall(req.Method, &res, skipToken)
+		if err != nil {
+			return err
+		}
+		data = append(data, res.Data...)
+	}
+
+	var dataBytes []byte
+
+	//converts json.RawMessage into []bytes and adds a comma at the end
+	for _, v := range data {
+		b, _ := v.MarshalJSON()
+		dataBytes = append(dataBytes, b...)
+		dataBytes = append(dataBytes, []byte(",")...)
+	}
+
+	toReturn := []byte(`{"value":[`)                             //add missing "value" tag
+	toReturn = append(toReturn, dataBytes[:len(dataBytes)-1]...) //append previous data and skip last comma
+	toReturn = append(toReturn, []byte("]}")...)
+
+	return json.Unmarshal(toReturn, &v) // return the error of the json unmarshal
 }
 
 // ListUsers returns a list of all users

@@ -24,10 +24,7 @@ working & tested:
 - set timezone for full-day CalendarEvent
 - use `$select`, `$search` and `$filter` when querying data
 - `context`-aware API calls, can be cancelled.
-
-in progress:
-
-- implement paging to load huge data-sets, currently limitted to one page, 999 entries
+- loading huge data sets with paging, thanks to PR #20 - [@Goorsky123](https://github.com/Goorsky123)
 
 planned:
 
