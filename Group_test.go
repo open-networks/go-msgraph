@@ -109,7 +109,7 @@ func TestGroup_ListTransitiveMembers(t *testing.T) {
 				return
 			}
 			if !tt.wantErr && len(got) == 0 {
-				t.Errorf("Group.ListTransitiveMembers() = %v, want at least one member of that group", got)
+				t.Errorf("Group.ListTransitiveMembers() = %v, len(%d), want at least one member of that group", got, len(got))
 			}
 		})
 	}
