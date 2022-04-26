@@ -14,6 +14,14 @@
 
 This implementation has been written to get various user, group and calendar details out of a Microsoft Azure Active Directory and create / update the same.
 
+## :warning: Deprecation warning
+
+This code was created as part of a software project developed by Open Networks GmbH, Austria (the one in Europe :wink:) in the year 2017. The company has been bought by Bechtle AG, Germany in 2021 and the software project is planned to be replaced by end of 2022. Furthermore, the employee mainly working on this project also left the company by April 2022 and may only contribute in his leisure time.
+
+Back in the days, there was no official support from Microsoft for Go lang. This support has been added in 2021, see [Issue #25](https://github.com/open-networks/go-msgraph/issues/25).
+
+Therefore, I strongly advise you to use the new official implementation from Microsoft at [Golang MSGraph SDK by Microsoft](https://github.com/microsoftgraph/msgraph-sdk-go).
+
 ## Features
 
 working & tested:
