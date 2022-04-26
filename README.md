@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/open-networks/go-msgraph/branch/master/graph/badge.svg)](https://codecov.io/gh/open-networks/go-msgraph)
 [![MIT License](https://img.shields.io/github/license/open-networks/go-msgraph)](LICENSE)
 
-`go-msgraph` is an incomplete go lang implementation of the Microsoft Graph API. See [Overview of Microsoft Graph](https://developer.microsoft.com/en-us/graph/docs/concepts/overview)
+`go-msgraph` is an incomplete go lang implementation of the Microsoft Graph API. See [Overview of Microsoft Graph](https://docs.microsoft.com/en-us/graph/overview)
 
 ## General
 
@@ -29,7 +29,7 @@ working & tested:
 planned:
 
 - String func that only prints non-empty values of an object, e.g. User
-- add further support for mail, personal contacts (outlook), devices and apps, files etc. See [https://developer.microsoft.com/en-us/graph/docs/concepts/v1-overview](https://developer.microsoft.com/en-us/graph/docs/concepts/v1-overview)
+- add further support for mail, personal contacts (outlook), devices and apps, files etc. See [https://docs.microsoft.com/en-us/graph/overview](https://docs.microsoft.com/en-us/graph/overview)
 
 ## Example
 
