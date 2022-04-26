@@ -14,6 +14,7 @@ type User struct {
 	BusinessPhones    []string          `json:"businessPhones,omitempty"`
 	DisplayName       string            `json:"displayName,omitempty"`
 	GivenName         string            `json:"givenName,omitempty"`
+	JobTitle          string            `json:"jobTitle,omitempty"`
 	Mail              string            `json:"mail,omitempty"`
 	MobilePhone       string            `json:"mobilePhone,omitempty"`
 	PreferredLanguage string            `json:"preferredLanguage,omitempty"`
@@ -43,9 +44,9 @@ type PasswordProfile struct {
 
 func (u User) String() string {
 	return fmt.Sprintf("User(ID: \"%v\", BusinessPhones: \"%v\", DisplayName: \"%v\", GivenName: \"%v\", "+
-		"Mail: \"%v\", MobilePhone: \"%v\", PreferredLanguage: \"%v\", Surname: \"%v\", UserPrincipalName: \"%v\", "+
-		"ActivePhone: \"%v\", DirectAPIConnection: %v)",
-		u.ID, u.BusinessPhones, u.DisplayName, u.GivenName, u.Mail, u.MobilePhone, u.PreferredLanguage, u.Surname,
+		"JobTitle: \"%v\", Mail: \"%v\", MobilePhone: \"%v\", PreferredLanguage: \"%v\", Surname: \"%v\", "+
+		"UserPrincipalName: \"%v\", ActivePhone: \"%v\", DirectAPIConnection: %v)",
+		u.ID, u.BusinessPhones, u.DisplayName, u.GivenName, u.JobTitle, u.Mail, u.MobilePhone, u.PreferredLanguage, u.Surname,
 		u.UserPrincipalName, u.activePhone, u.graphClient != nil)
 }
 
@@ -235,6 +236,6 @@ func (u User) Equal(other User) bool {
 	}
 	equalBool = equalBool && len(u.BusinessPhones) == len(other.BusinessPhones)
 	return equalBool && u.ID == other.ID && u.DisplayName == other.DisplayName && u.GivenName == other.GivenName &&
-		u.Mail == other.Mail && u.MobilePhone == other.MobilePhone && u.PreferredLanguage == other.PreferredLanguage &&
-		u.Surname == other.Surname && u.UserPrincipalName == other.UserPrincipalName
+		u.JobTitle == other.JobTitle && u.Mail == other.Mail && u.MobilePhone == other.MobilePhone &&
+		u.PreferredLanguage == other.PreferredLanguage && u.Surname == other.Surname && u.UserPrincipalName == other.UserPrincipalName
 }

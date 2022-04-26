@@ -152,10 +152,10 @@ func TestUser_String(t *testing.T) {
 	}{
 		name: "Test user func String",
 		u:    &u,
-		want: fmt.Sprintf("User(ID: \"%v\", BusinessPhones: \"%v\", DisplayName: \"%v\", GivenName: \"%v\", "+
+		want: fmt.Sprintf("User(ID: \"%v\", BusinessPhones: \"%v\", DisplayName: \"%v\", GivenName: \"%v\", JobTitle: \"%v\", "+
 			"Mail: \"%v\", MobilePhone: \"%v\", PreferredLanguage: \"%v\", Surname: \"%v\", UserPrincipalName: \"%v\", "+
 			"ActivePhone: \"%v\", DirectAPIConnection: %v)",
-			u.ID, u.BusinessPhones, u.DisplayName, u.GivenName, u.Mail, u.MobilePhone, u.PreferredLanguage, u.Surname,
+			u.ID, u.BusinessPhones, u.DisplayName, u.GivenName, u.JobTitle, u.Mail, u.MobilePhone, u.PreferredLanguage, u.Surname,
 			u.UserPrincipalName, u.activePhone, u.graphClient != nil),
 	}
 
