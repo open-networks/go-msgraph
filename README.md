@@ -8,11 +8,11 @@
 [![codecov](https://codecov.io/gh/open-networks/go-msgraph/branch/master/graph/badge.svg)](https://codecov.io/gh/open-networks/go-msgraph)
 [![MIT License](https://img.shields.io/github/license/open-networks/go-msgraph)](LICENSE)
 
-`go-msgraph` is a go lang implementation of the Microsoft Graph API. See [Overview of Microsoft Graph](https://developer.microsoft.com/en-us/graph/docs/concepts/overview)
+`go-msgraph` is an incomplete go lang implementation of the Microsoft Graph API. See [Overview of Microsoft Graph](https://developer.microsoft.com/en-us/graph/docs/concepts/overview)
 
 ## General
 
-This implementation has been written to get various user, group and calendar details out of a Microsoft Azure Active Directory. Currently only READ-access is implemented, but you are welcome to add WRITE-support to it & backmerge it.
+This implementation has been written to get various user, group and calendar details out of a Microsoft Azure Active Directory and create / update the same.
 
 ## Features
 
