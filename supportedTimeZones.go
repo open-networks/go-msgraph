@@ -190,6 +190,7 @@ var WinIANA = map[string]string{
 	"(UTC+06:00) Dhaka":                                             "Asia/Dhaka",
 	"(UTC+06:00) Omsk":                                              "Asia/Omsk",
 	"(UTC+06:00) Novosibirsk":                                       "Asia/Novosibirsk",
+	"(UTC+06:00) Nur-Sultan":                                        "Asia/Almaty",
 	"(UTC+06:30) Yangon (Rangoon)":                                  "Asia/Rangoon",
 	"(UTC+07:00) Bangkok, Hanoi, Jakarta":                           "Asia/Bangkok",
 	"(UTC+07:00) Barnaul, Gorno-Altaysk":                            "Asia/Krasnoyarsk",
