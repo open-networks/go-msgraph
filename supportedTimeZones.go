@@ -96,6 +96,7 @@ var WinIANA = map[string]string{
 	"(UTC-07:00) Chihuahua, La Paz, Mazatlan":                       "America/Chihuahua",
 	"(UTC-07:00) Mountain Time (US & Canada)":                       "America/Denver",
 	"(UTC-07:00) Yukon":                                             "Etc/GMT+7",
+	"(UTC-07:00) La Paz, Mazatlan":                                  "Etc/GMT+7",
 	"(UTC-06:00) Central America":                                   "America/Guatemala",
 	"(UTC-06:00) Central Time (US & Canada)":                        "America/Chicago",
 	"(UTC-06:00) Easter Island":                                     "Pacific/Easter",
